@@ -117,7 +117,20 @@ created_at       timestamptz
 
 ---
 
-## 6. Gemini API Key
+## 6. Environment Variables
+
+```
+VITE_SUPABASE_URL        Supabase project URL
+VITE_SUPABASE_ANON_KEY   Supabase publishable (anon) key
+VITE_GOOGLE_CLIENT_ID    Google OAuth client ID
+VITE_GEMINI_API_KEY      Your own Gemini key — local dev/testing only
+```
+
+`VITE_GEMINI_API_KEY` is only used in local development to test extraction without requiring a real user account. It must never be used in production code paths. In production, the Gemini key always comes from `profiles.gemini_api_key` fetched from Supabase.
+
+---
+
+## 7. Gemini API Key
 
 - Stored in `profiles.gemini_api_key`, never in localStorage or env vars.
 - Fetched once on app load, held in a React context (`GeminiKeyContext`).
@@ -126,7 +139,7 @@ created_at       timestamptz
 
 ---
 
-## 7. Build Slices
+## 8. Build Slices
 
 Each slice is independently testable on a real device before starting the next.
 

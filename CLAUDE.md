@@ -31,6 +31,17 @@ npx supabase db reset       # reset DB and re-run all migrations
 npx supabase gen types typescript --local > src/types/supabase.ts  # regenerate types
 ```
 
+## Environment Variables
+
+```
+VITE_SUPABASE_URL        Supabase project URL
+VITE_SUPABASE_ANON_KEY   Supabase publishable (anon) key
+VITE_GOOGLE_CLIENT_ID    Google OAuth client ID
+VITE_GEMINI_API_KEY      Local dev/testing only — never used in production
+```
+
+`VITE_GEMINI_API_KEY` is for local development only. In production, the Gemini key always comes from `profiles.gemini_api_key` in Supabase. Never use the env var key in production code paths.
+
 ## Architecture
 
 ### Auth
