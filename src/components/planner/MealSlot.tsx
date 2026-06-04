@@ -32,7 +32,7 @@ export function MealSlot({ date, mealType, slot }: MealSlotProps) {
           <span className="font-sans text-xs text-warm-primary line-clamp-2 flex-1 leading-tight">{slot.recipe.title}</span>
           <button onClick={() => removeSlot({ id: slot.id, slot_date: date })}
             aria-label="Remove from plan"
-            className="min-w-[28px] min-h-[28px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation">
+            className="min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation">
             <X className="w-3.5 h-3.5 text-warm-muted" />
           </button>
         </div>

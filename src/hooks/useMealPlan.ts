@@ -36,7 +36,7 @@ export function useAddMealSlot() {
 export function useRemoveMealSlot() {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ id, slot_date: _slot_date }: { id: string; slot_date: string }) => {
+    mutationFn: async ({ id }: { id: string; slot_date: string }) => {
       const { error } = await supabase.from('meal_plan_slots').delete().eq('id', id)
       if (error) throw error
     },

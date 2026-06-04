@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Search } from 'lucide-react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
@@ -11,16 +11,36 @@ interface RecipePickerProps {
 export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
   const { data: recipes = [] } = useRecipes()
   const [search, setSearch] = useState('')
-  const filtered = recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase()))
+
+  useEffect(() => {
+    document.body.style.overflow = 'hidden'
+    return () => { document.body.style.overflow = '' }
+  }, [])
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [onClose])
+
+  const filtered = useMemo(
+    () => recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase())),
+    [recipes, search]
+  )
 
   return (
     <div className="fixed inset-0 z-40 flex items-end">
       <div className="absolute inset-0 bg-warm-primary/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-warm-card w-full rounded-t-2xl flex flex-col max-h-[80vh]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}>
+      <div
+        className="relative bg-warm-card w-full rounded-t-2xl flex flex-col max-h-[80vh]"
+        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="recipe-picker-title"
+      >
         <div className="w-8 h-1 bg-warm-border rounded-full mx-auto mt-3 mb-2" />
         <div className="flex items-center justify-between px-4 pb-3">
-          <h2 className="font-serif text-lg font-bold text-warm-primary">Choose Recipe</h2>
+          <h2 id="recipe-picker-title" className="font-serif text-lg font-bold text-warm-primary">Choose Recipe</h2>
           <button onClick={onClose} aria-label="Close"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation">
             <X className="w-5 h-5 text-warm-secondary" />
@@ -29,9 +49,14 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
         <div className="px-4 pb-3">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-muted" aria-hidden="true" />
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search…"
+            <input
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="Search…"
               aria-label="Search recipes"
-              className="w-full bg-warm-surface border border-warm-border rounded-xl pl-9 pr-4 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]" />
+              autoFocus
+              className="w-full bg-warm-surface border border-warm-border rounded-xl pl-9 pr-4 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]"
+            />
           </div>
         </div>
         <div className="overflow-y-auto flex-1 px-4 pb-4 flex flex-col gap-1">
@@ -47,6 +72,11 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
               <span className="font-sans text-sm text-warm-primary line-clamp-2">{r.title}</span>
             </button>
           ))}
+          {filtered.length === 0 && (
+            <p className="font-sans text-warm-muted text-sm text-center py-8">
+              {search ? 'No recipes match your search' : 'No recipes yet — add one first'}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -30,7 +30,7 @@ export interface MealPlanSlot {
   meal_type: 'lunch' | 'dinner'
   recipe_id: string
   created_at: string
-  recipe?: Recipe
+  recipe?: Pick<Recipe, 'id' | 'title' | 'image_url'>
 }
 
 export interface GroceryItem {
