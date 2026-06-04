@@ -20,6 +20,14 @@ export function GroceryPage() {
     }
   }, [confirmRegen])
 
+  // Escape key closes confirm modal
+  useEffect(() => {
+    if (!confirmRegen) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setConfirmRegen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [confirmRegen])
+
   const grouped = new Map<string, { title: string; items: GroceryItem[] }>()
   const manual: GroceryItem[] = []
   for (const item of items) {

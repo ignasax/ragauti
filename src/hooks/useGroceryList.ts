@@ -21,8 +21,7 @@ export function useGenerateGroceryList(weekStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      await supabase.from('grocery_items').delete().eq('week_start', weekStart)
-
+      // 1. Fetch meal plan slots FIRST (before any destructive operations)
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
       const { data: slots, error } = await supabase
@@ -32,11 +31,12 @@ export function useGenerateGroceryList(weekStart: string) {
         .lte('slot_date', weekEnd.toISOString().split('T')[0])
       if (error) throw error
 
+      // 2. Build items in memory
       const items: Omit<GroceryItem, 'id' | 'user_id' | 'created_at' | 'recipe'>[] = []
       let order = 0
       for (const slot of (slots as (MealPlanSlot & { recipe: { id: string; title: string; ingredients: string } })[]) ?? []) {
         if (!slot.recipe) continue
-        const lines = slot.recipe.ingredients.split('\n').filter(l => l.trim())
+        const lines = (slot.recipe.ingredients ?? '').split('\n').filter(l => l.trim())
         for (const line of lines) {
           items.push({
             week_start: weekStart,
@@ -48,6 +48,10 @@ export function useGenerateGroceryList(weekStart: string) {
         }
       }
 
+      // 3. Only now delete the old list (we have the new one ready)
+      await supabase.from('grocery_items').delete().eq('week_start', weekStart)
+
+      // 4. Insert new items
       if (items.length) {
         const { error: insertError } = await supabase.from('grocery_items').insert(items)
         if (insertError) throw insertError
@@ -74,7 +78,7 @@ export function useAddGroceryItem(weekStart: string) {
   return useMutation({
     mutationFn: async (text: string) => {
       const { error } = await supabase.from('grocery_items').insert({
-        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: 9999,
+        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Date.now(),
       })
       if (error) throw error
     },

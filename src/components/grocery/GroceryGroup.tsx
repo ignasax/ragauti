@@ -9,9 +9,9 @@ interface GroceryGroupProps {
 export function GroceryGroup({ title, items }: GroceryGroupProps) {
   return (
     <div>
-      <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block px-3 mb-1">
+      <h3 className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block px-3 mb-1">
         {title}
-      </span>
+      </h3>
       <div className="bg-warm-card border border-warm-border rounded-xl overflow-hidden">
         {items.map((item, i) => (
           <div key={item.id}>
