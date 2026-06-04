@@ -53,7 +53,8 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       <div>
         <label htmlFor="image" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Image</label>
         <input id="image" value={data.image_url ?? ''} onChange={e => set('image_url', e.target.value || null)} placeholder="Image URL" className={inputCls} />
-        <input type="file" accept="image/*" capture="environment" className="mt-2 font-sans text-sm text-warm-secondary w-full"
+        <label htmlFor="image-file" className="sr-only">Upload image from device</label>
+        <input id="image-file" type="file" accept="image/*" capture="environment" className="mt-2 font-sans text-sm text-warm-secondary w-full"
           onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
       </div>
       <div className="flex gap-3">
@@ -95,7 +96,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
           ))}
         </div>
         <div className="flex gap-2">
-          <input value={categoryInput} onChange={e => setCategoryInput(e.target.value)}
+          <input id="category-input" aria-label="New category" value={categoryInput} onChange={e => setCategoryInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); addCategory() } }}
             placeholder="Add category" className={`${inputCls} flex-1`} />
           <button type="button" onClick={addCategory}
