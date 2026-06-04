@@ -25,6 +25,7 @@ export function LoginPage() {
         <p className="font-sans text-warm-secondary text-base">Your personal recipe book</p>
       </div>
       <button
+        type="button"
         onClick={handleGoogleLogin}
         className="w-full max-w-xs bg-warm-accent text-white font-sans font-semibold text-sm px-6 py-3 rounded-xl min-h-[44px] active:opacity-80 transition-opacity duration-150 touch-manipulation cursor-pointer"
       >

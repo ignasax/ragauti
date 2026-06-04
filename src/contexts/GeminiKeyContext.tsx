@@ -26,7 +26,8 @@ export function GeminiKeyProvider({ children }: { children: React.ReactNode }) {
       .select('gemini_api_key')
       .eq('id', user.id)
       .single()
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error && error.code !== 'PGRST116') console.error('profiles fetch:', error)
         setGeminiKeyState(data?.gemini_api_key ?? null)
         setIsLoading(false)
       })
