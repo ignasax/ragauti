@@ -1,0 +1,40 @@
+import { describe, it, expect } from 'vitest'
+import { filterRecipes } from './recipeFilter'
+import type { Recipe } from '../types/app'
+
+const base: Recipe = {
+  id: '1', user_id: 'u1', title: 'Pasta', ingredients: 'garlic\npasta',
+  instructions: 'cook', image_url: null, cook_time_mins: 20, prep_time_mins: 5,
+  servings: 2, rating: 4, categories: ['Italian'], comments: null,
+  is_favourite: false, source_url: null, created_at: '', updated_at: '',
+}
+
+describe('filterRecipes', () => {
+  it('returns all when no filters', () => {
+    expect(filterRecipes([base], {})).toHaveLength(1)
+  })
+  it('filters by search term in title', () => {
+    expect(filterRecipes([base], { search: 'past' })).toHaveLength(1)
+    expect(filterRecipes([base], { search: 'soup' })).toHaveLength(0)
+  })
+  it('filters by search term in ingredients', () => {
+    expect(filterRecipes([base], { search: 'garlic' })).toHaveLength(1)
+  })
+  it('filters by minimum rating', () => {
+    expect(filterRecipes([base], { minRating: 4 })).toHaveLength(1)
+    expect(filterRecipes([base], { minRating: 5 })).toHaveLength(0)
+  })
+  it('filters by favourites only', () => {
+    expect(filterRecipes([base], { favouritesOnly: true })).toHaveLength(0)
+    expect(filterRecipes([{ ...base, is_favourite: true }], { favouritesOnly: true })).toHaveLength(1)
+  })
+  it('filters by category', () => {
+    expect(filterRecipes([base], { categories: ['Italian'] })).toHaveLength(1)
+    expect(filterRecipes([base], { categories: ['Mexican'] })).toHaveLength(0)
+  })
+  it('composes multiple filters', () => {
+    const r2 = { ...base, id: '2', title: 'Soup', rating: 3, categories: ['French'] }
+    expect(filterRecipes([base, r2], { search: 'soup', minRating: 4 })).toHaveLength(0)
+    expect(filterRecipes([base, r2], { search: 'soup', minRating: 3 })).toHaveLength(1)
+  })
+})
