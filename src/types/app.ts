@@ -1,3 +1,9 @@
+export interface Profile {
+  id: string
+  gemini_api_key: string | null
+  created_at: string
+}
+
 export interface Recipe {
   id: string
   user_id: string

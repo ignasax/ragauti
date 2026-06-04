@@ -1,9 +1,7 @@
-function App() {
-  return (
-    <div className="min-h-screen bg-warm-base font-sans">
-      <h1 className="font-serif text-warm-primary">Ragauti</h1>
-    </div>
-  )
-}
+import { createBrowserRouter } from 'react-router-dom'
+import { LoginPage } from './pages/LoginPage'
 
-export default App
+export const router = createBrowserRouter([
+  { path: '/login', element: <LoginPage /> },
+  { path: '*', element: <LoginPage /> },
+])
