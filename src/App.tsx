@@ -9,6 +9,7 @@ import { SettingsPage } from './pages/SettingsPage'
 import { AddRecipePage } from './pages/AddRecipePage'
 import { EditRecipePage } from './pages/EditRecipePage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
+import { ShareTargetPage } from './pages/ShareTargetPage'
 
 const ProtectedShell = () => (
   <ProtectedRoute>
@@ -29,6 +30,7 @@ export const router = createBrowserRouter([
       { path: '/grocery',  element: <GroceryPage /> },
       { path: '/settings', element: <SettingsPage /> },
       { path: '/',         element: <RecipesPage /> },
+      { path: '/share-target', element: <ShareTargetPage /> },
     ],
   },
 ])
