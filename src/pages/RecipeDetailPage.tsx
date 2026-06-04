@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Pencil, Trash2, Heart } from 'lucide-react'
 import { useRecipe } from '../hooks/useRecipe'
@@ -8,13 +8,32 @@ import { ServingScaler } from '../components/recipes/ServingScaler'
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { data: recipe, isLoading } = useRecipe(id!)
+  const { data: recipe, isLoading, isError } = useRecipe(id ?? '')
   const { mutateAsync: deleteRecipe, isPending: isDeleting } = useDeleteRecipe()
   const { mutate: toggleFav } = useToggleFavourite()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [section, setSection] = useState<'ingredients' | 'instructions' | 'notes'>('ingredients')
 
-  if (isLoading || !recipe) return <div className="min-h-screen bg-warm-base" />
+  useEffect(() => {
+    if (confirmDelete) {
+      document.body.style.overflow = 'hidden'
+      return () => { document.body.style.overflow = '' }
+    }
+  }, [confirmDelete])
+
+  if (isLoading) return <div className="min-h-screen bg-warm-base" />
+  if (isError) return (
+    <div className="min-h-screen bg-warm-base flex flex-col items-center justify-center gap-4 px-4">
+      <p className="font-serif text-warm-secondary text-lg">Recipe not found</p>
+      <button onClick={() => navigate('/recipes')} className="font-sans text-warm-accent text-sm cursor-pointer touch-manipulation">Back to recipes</button>
+    </div>
+  )
+  if (!recipe) return (
+    <div className="min-h-screen bg-warm-base flex flex-col items-center justify-center gap-4 px-4">
+      <p className="font-serif text-warm-secondary text-lg">Recipe not found</p>
+      <button onClick={() => navigate('/recipes')} className="font-sans text-warm-accent text-sm cursor-pointer touch-manipulation">Back to recipes</button>
+    </div>
+  )
 
   return (
     <div className="bg-warm-base min-h-screen">
@@ -50,11 +69,11 @@ export function RecipeDetailPage() {
           {recipe.prep_time_mins && <span>Prep {recipe.prep_time_mins} min</span>}
           {recipe.cook_time_mins && <span>Cook {recipe.cook_time_mins} min</span>}
           {recipe.servings && <span>{recipe.servings} servings</span>}
-          {recipe.rating && <span>{'★'.repeat(recipe.rating)}</span>}
+          {recipe.rating && <span>{'★'.repeat(Math.max(0, Math.floor(recipe.rating ?? 0)))}</span>}
         </div>
-        {recipe.categories.length > 0 && (
+        {(recipe.categories?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {recipe.categories.map(c => (
+            {recipe.categories?.map(c => (
               <span key={c} className="bg-warm-surface text-warm-secondary font-sans text-xs px-2 py-1 rounded-full">{c}</span>
             ))}
           </div>
@@ -74,9 +93,9 @@ export function RecipeDetailPage() {
         {section === 'notes' && <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">{recipe.comments || <span className="text-warm-muted">No notes yet.</span>}</div>}
       </div>
       {confirmDelete && (
-        <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm flex items-end">
-          <div className="bg-warm-card w-full rounded-t-2xl p-6 flex flex-col gap-4" style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
-            <h2 className="font-serif text-lg font-bold text-warm-primary">Delete Recipe?</h2>
+        <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm flex items-end" onClick={() => setConfirmDelete(false)}>
+          <div className="bg-warm-card w-full rounded-t-2xl p-6 flex flex-col gap-4" role="dialog" aria-modal="true" aria-labelledby="delete-dialog-title" onClick={e => e.stopPropagation()} style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}>
+            <h2 id="delete-dialog-title" className="font-serif text-lg font-bold text-warm-primary">Delete Recipe?</h2>
             <p className="font-sans text-warm-secondary text-sm">This cannot be undone.</p>
             <button onClick={async () => { await deleteRecipe(recipe.id); navigate('/recipes') }} disabled={isDeleting}
               className="w-full bg-red-600 text-white font-sans font-semibold text-sm py-3 rounded-xl min-h-[44px] active:opacity-80 cursor-pointer touch-manipulation">
