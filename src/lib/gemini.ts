@@ -35,5 +35,25 @@ ${html.slice(0, 80_000)}`
   const text = await callGemini(prompt, key)
   const match = text.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('No JSON in Gemini response')
-  return JSON.parse(match[0]) as ExtractedRecipe
+  const raw = JSON.parse(match[0])
+  return sanitizeExtracted(raw)
+}
+
+function sanitizeExtracted(raw: unknown): ExtractedRecipe {
+  if (typeof raw !== 'object' || raw === null) return {}
+  const obj = raw as Record<string, unknown>
+  const result: ExtractedRecipe = {}
+  if (typeof obj.title === 'string') result.title = obj.title
+  if (typeof obj.ingredients === 'string') result.ingredients = obj.ingredients
+  if (typeof obj.instructions === 'string') result.instructions = obj.instructions
+  if (typeof obj.cook_time_mins === 'number' && Number.isFinite(obj.cook_time_mins)) result.cook_time_mins = Math.max(0, Math.floor(obj.cook_time_mins))
+  if (typeof obj.prep_time_mins === 'number' && Number.isFinite(obj.prep_time_mins)) result.prep_time_mins = Math.max(0, Math.floor(obj.prep_time_mins))
+  if (typeof obj.servings === 'number' && Number.isFinite(obj.servings)) result.servings = Math.max(1, Math.floor(obj.servings))
+  if (typeof obj.image_url === 'string') {
+    try {
+      const u = new URL(obj.image_url)
+      if (u.protocol === 'https:' || u.protocol === 'http:') result.image_url = obj.image_url
+    } catch { /* skip invalid image_url */ }
+  }
+  return result
 }

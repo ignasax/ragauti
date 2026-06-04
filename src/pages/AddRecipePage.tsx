@@ -34,7 +34,8 @@ export function AddRecipePage() {
       setUrlInput(sharedUrl)
       handleExtract(sharedUrl)
     }
-  }, [sharedUrl]) // eslint-disable-line react-hooks/exhaustive-deps
+    // Only fire when arriving with a shared URL or when key becomes available
+  }, [sharedUrl, geminiKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Remount RecipeForm with new initialData when extraction completes
   useEffect(() => {

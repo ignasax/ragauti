@@ -18,7 +18,10 @@ export function useGeminiExtract(geminiKey: string | null) {
     setState({ isExtracting: true, extracted: null, error: null, hasPartialData: false })
     try {
       const res = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`)
-      if (!res.ok) throw new Error('Could not fetch the URL')
+      if (!res.ok) {
+        const body = await res.json().catch(() => null)
+        throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')
+      }
       const { html } = await res.json()
       const data = await extractRecipe(html, geminiKey)
       const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
