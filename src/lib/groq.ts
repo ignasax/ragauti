@@ -1,4 +1,4 @@
-import { extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe } from './gemini'
+import { htmlToText, extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe } from './gemini'
 
 export async function extractRecipeWithGroq(html: string, key: string): Promise<ExtractedRecipe> {
   const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
@@ -6,12 +6,7 @@ export async function extractRecipeWithGroq(html: string, key: string): Promise<
   console.log('[groq] JSON-LD result:', fromLd)
   if (fromLd && required.every(k => fromLd[k])) return fromLd
 
-  const TEST_RECIPE = `Classic Chocolate Chip Cookies
-Prep time: 15 minutes. Cook time: 12 minutes. Serves 24.
-Ingredients: 2 1/4 cups all-purpose flour, 1 tsp baking soda, 1 tsp salt, 1 cup butter softened, 3/4 cup granulated sugar, 3/4 cup packed brown sugar, 2 large eggs, 2 tsp vanilla extract, 2 cups chocolate chips.
-Instructions: 1. Preheat oven to 375F. 2. Mix flour baking soda and salt in a bowl. 3. Beat butter and sugars until creamy. 4. Add eggs and vanilla to butter mixture. 5. Gradually blend in flour mixture. 6. Stir in chocolate chips. 7. Drop rounded tablespoons onto ungreased baking sheets. 8. Bake 9 to 11 minutes or until golden brown.`
-
-  const text = TEST_RECIPE  // TODO: replace with htmlToText(html).slice(0, 25_000)
+  const text = htmlToText(html).slice(0, 25_000)
   console.log('[groq] text preview (first 500):', text.slice(0, 500))
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
