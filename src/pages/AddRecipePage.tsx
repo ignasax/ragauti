@@ -11,8 +11,9 @@ export function AddRecipePage() {
   const navigate = useNavigate()
   const location = useLocation()
   const { mutateAsync, isPending } = useAddRecipe()
-  const { geminiKey } = useGeminiKey()
-  const { extract, isExtracting, extracted, error, hasPartialData } = useGeminiExtract(geminiKey)
+  const { geminiKey, groqKey, provider } = useGeminiKey()
+  const { extract, isExtracting, extracted, error, missingFields } = useGeminiExtract()
+  const hasActiveKey = provider === 'groq' ? !!groqKey : !!geminiKey
   const [urlInput, setUrlInput] = useState('')
   const [formKey, setFormKey] = useState(0)
 
@@ -43,7 +44,7 @@ export function AddRecipePage() {
         <input value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Paste recipe URL…"
           aria-label="Recipe URL"
           className="flex-1 bg-warm-surface border border-warm-border rounded-lg px-3 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]" />
-        {geminiKey ? (
+        {hasActiveKey ? (
           <button type="button" onClick={() => handleExtract(urlInput)} disabled={!urlInput || isExtracting}
             className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] flex items-center gap-1.5 active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
             <Sparkles className="w-4 h-4" aria-hidden="true" />
@@ -54,7 +55,11 @@ export function AddRecipePage() {
         )}
       </div>
       {error && <p className="font-sans text-sm text-red-600">{error}. Fill in the form manually.</p>}
-      {hasPartialData && <p className="font-sans text-sm text-warm-secondary bg-warm-surface border border-warm-border rounded-lg px-3 py-2">Some fields couldn't be extracted — please review before saving.</p>}
+      {missingFields.length > 0 && (
+        <p className="font-sans text-sm text-warm-secondary bg-warm-surface border border-warm-border rounded-lg px-3 py-2">
+          Couldn't extract: <span className="font-semibold">{missingFields.join(', ')}</span> — please fill these in before saving.
+        </p>
+      )}
     </div>
   )
 
