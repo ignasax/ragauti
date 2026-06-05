@@ -26,40 +26,26 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
   const [data, setData] = useState<RecipeFormData>({ ...empty, ...initialData, servings: initialData?.servings ?? 1 })
   const [categoryInput, setCategoryInput] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(
+    initialData?.image_urls?.[0] ?? initialData?.image_url ?? null
+  )
   const [isUploading, setIsUploading] = useState(false)
-
-  // Existing images (already uploaded URLs)
-  const [existingUrls, setExistingUrls] = useState<string[]>(() => {
-    if (initialData?.image_urls?.length) return initialData.image_urls
-    if (initialData?.image_url) return [initialData.image_url]
-    return []
-  })
-  // New files to upload
-  const [newFiles, setNewFiles] = useState<File[]>([])
-  const [newPreviews, setNewPreviews] = useState<string[]>([])
-
-  const allPreviews = [...existingUrls, ...newPreviews]
 
   const set = <K extends keyof RecipeFormData>(key: K, value: RecipeFormData[K]) =>
     setData(d => ({ ...d, [key]: value }))
 
-  const MAX_IMAGES = 3
-
   const handleImageFile = (file: File) => {
     if (!file.type.startsWith('image/')) return
-    if (allPreviews.length >= MAX_IMAGES) return
-    setNewFiles(f => [...f, file])
-    setNewPreviews(p => [...p, URL.createObjectURL(file)])
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
   }
 
-  const removeImage = (index: number) => {
-    if (index < existingUrls.length) {
-      setExistingUrls(u => u.filter((_, i) => i !== index))
-    } else {
-      const ni = index - existingUrls.length
-      setNewFiles(f => f.filter((_, i) => i !== ni))
-      setNewPreviews(p => p.filter((_, i) => i !== ni))
-    }
+  const clearImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    set('image_url', null)
+    set('image_urls', [])
   }
 
   const addCategory = () => {
@@ -75,15 +61,14 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
 
     let finalData = { ...data }
 
-    if (newFiles.length > 0) {
+    if (imageFile) {
       setIsUploading(true)
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          const uploadedUrls = await Promise.all(newFiles.map(f => uploadRecipeImage(f, user.id)))
-          const allUrls = [...existingUrls, ...uploadedUrls]
-          finalData.image_urls = allUrls
-          finalData.image_url = allUrls[0] ?? null
+          const url = await uploadRecipeImage(imageFile, user.id)
+          finalData.image_url = url
+          finalData.image_urls = [url]
         }
       } catch {
         setError('Image upload failed — please try again or skip the image.')
@@ -91,9 +76,6 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         return
       }
       setIsUploading(false)
-    } else {
-      finalData.image_urls = existingUrls
-      finalData.image_url = existingUrls[0] ?? null
     }
 
     await onSubmit(finalData)
@@ -110,42 +92,33 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       </div>
 
       <div>
-        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">
-          Images <span className="text-warm-muted normal-case font-normal">({allPreviews.length}/{MAX_IMAGES})</span>
-        </span>
-        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          {allPreviews.length < MAX_IMAGES && (
-            <>
-              <label htmlFor="image-camera"
-                className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-                <Camera className="w-4 h-4" aria-hidden="true" />
-                Take Photo
-              </label>
-              <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
-                onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
-              <label htmlFor="image-gallery"
-                className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-                <ImagePlus className="w-4 h-4" aria-hidden="true" />
-                Choose File
-              </label>
-              <input id="image-gallery" type="file" accept="image/*" multiple className="sr-only"
-                onChange={e => {
-                  const files = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES - allPreviews.length)
-                  files.forEach(f => handleImageFile(f))
-                  e.target.value = ''
-                }} />
-            </>
-          )}
-          {allPreviews.map((src, i) => (
-            <div key={i} className="relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden self-center">
-              <img src={src} alt="" className="w-full h-full object-cover" />
-              <button type="button" onClick={() => removeImage(i)} aria-label="Remove image"
-                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center cursor-pointer touch-manipulation z-10">
-                <X className="w-3 h-3 text-white" />
-              </button>
-            </div>
-          ))}
-        </div>
+        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Image</span>
+        {imagePreview ? (
+          <div className="relative rounded-xl overflow-hidden aspect-video bg-warm-surface">
+            <img src={imagePreview} alt="Recipe preview" className="w-full h-full object-cover" />
+            <button type="button" onClick={clearImage} aria-label="Remove image"
+              className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
+              <X className="w-4 h-4 text-white" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <label htmlFor="image-camera"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+              <Camera className="w-4 h-4" aria-hidden="true" />
+              Take Photo
+            </label>
+            <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
+            <label htmlFor="image-gallery"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+              <ImagePlus className="w-4 h-4" aria-hidden="true" />
+              Choose File
+            </label>
+            <input id="image-gallery" type="file" accept="image/*" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
+          </div>
+        )}
       </div>
 
       <div className="flex gap-3">

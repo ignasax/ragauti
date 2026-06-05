@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { ChevronLeft, Pencil, Trash2, Heart, User } from 'lucide-react'
 import { useRecipe } from '../hooks/useRecipe'
@@ -13,8 +13,6 @@ export function RecipeDetailPage() {
   const { mutate: toggleFav } = useToggleFavourite()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [section, setSection] = useState<'ingredients' | 'instructions' | 'notes'>('ingredients')
-  const [imgIndex, setImgIndex] = useState(0)
-  const galleryRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (confirmDelete) {
@@ -60,44 +58,17 @@ export function RecipeDetailPage() {
           </button>
         </div>
       </div>
-      {(() => {
-        const images = recipe.image_urls?.length ? recipe.image_urls : (recipe.image_url ? [recipe.image_url] : [])
-        if (!images.length) return null
-        return (
-          <div>
-            <div
-              ref={galleryRef}
-              className="flex overflow-x-auto snap-x snap-mandatory"
-              style={{ scrollbarWidth: 'none' }}
-              onScroll={e => {
-                const el = e.currentTarget
-                setImgIndex(Math.round(el.scrollLeft / el.clientWidth))
-              }}
-            >
-              {images.map((url, i) => (
-                <div key={i} className="flex-shrink-0 w-full aspect-video bg-warm-surface snap-center">
-                  <img src={url} alt={recipe.title} className="w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
-                </div>
-              ))}
-            </div>
-            {images.length > 1 && (
-              <div className="flex justify-center gap-1.5 py-2">
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    aria-label={`Image ${i + 1}`}
-                    onClick={() => {
-                      galleryRef.current?.scrollTo({ left: i * galleryRef.current.clientWidth, behavior: 'smooth' })
-                      setImgIndex(i)
-                    }}
-                    className={`w-1.5 h-1.5 rounded-full transition-colors touch-manipulation cursor-pointer ${i === imgIndex ? 'bg-warm-accent' : 'bg-warm-border'}`}
-                  />
-                ))}
-              </div>
-            )}
-          </div>
-        )
-      })()}
+      {(recipe.image_urls?.[0] ?? recipe.image_url) && (
+        <div className="w-full aspect-video bg-warm-surface">
+          <img
+            src={recipe.image_urls?.[0] ?? recipe.image_url!}
+            alt={recipe.title}
+            className="w-full h-full object-cover"
+            loading="eager"
+            decoding="async"
+          />
+        </div>
+      )}
       <div className="px-4 pt-4 pb-2">
         <h1 className="font-serif text-2xl font-bold text-warm-primary mb-1">{recipe.title}</h1>
         <div className="flex flex-wrap gap-3 font-sans text-warm-secondary text-sm">
