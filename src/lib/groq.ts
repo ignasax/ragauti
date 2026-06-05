@@ -6,7 +6,7 @@ export async function extractRecipeWithGroq(html: string, key: string): Promise<
   console.log('[groq] JSON-LD result:', fromLd)
   if (fromLd && required.every(k => fromLd[k])) return fromLd
 
-  const text = htmlToText(html).slice(0, 25_000)
+  const text = htmlToText(html).slice(0, 50_000)
   console.log('[groq] text length:', text.length, 'preview:', text.slice(0, 300))
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
