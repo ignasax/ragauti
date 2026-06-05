@@ -12,7 +12,7 @@ export function FilterChips({ filters, allCategories, onChange }: FilterChipsPro
     <div className="flex flex-wrap gap-2">
       {[1,2,3,4,5].map(n => (
         <button key={n} onClick={() => onChange({ ...filters, minRating: filters.minRating === n ? undefined : n })}
-          className={chip(filters.minRating === n)}>{'★'.repeat(n)}+</button>
+          className={chip(filters.minRating === n)}>{'★'.repeat(n)}</button>
       ))}
       <button onClick={() => onChange({ ...filters, favouritesOnly: !filters.favouritesOnly })}
         className={chip(!!filters.favouritesOnly)}>♥ Favourites</button>

@@ -2,9 +2,9 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import { Plus } from 'lucide-react'
 
 const fabConfig: Record<string, { label: string; action: string }> = {
-  '/recipes':  { label: '+ Add recipe',  action: '/recipes/new' },
-  '/planner':  { label: '+ Add to plan', action: '/planner?add=1' },
-  '/grocery':  { label: '+ Add item',    action: '/grocery?add=1' },
+  '/recipes':  { label: 'Add recipe',  action: '/recipes/new' },
+  '/planner':  { label: 'Add to plan', action: '/planner?add=1' },
+  '/grocery':  { label: 'Add item',    action: '/grocery?add=1' },
 }
 
 export function Fab() {

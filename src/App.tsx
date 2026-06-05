@@ -1,4 +1,4 @@
-import { createBrowserRouter } from 'react-router-dom'
+import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AppShell } from './components/layout/AppShell'
 import { ProtectedRoute } from './components/auth/ProtectedRoute'
 import { LoginPage } from './pages/LoginPage'
@@ -29,7 +29,7 @@ export const router = createBrowserRouter([
       { path: '/planner',          element: <PlannerPage /> },
       { path: '/grocery',  element: <GroceryPage /> },
       { path: '/settings', element: <SettingsPage /> },
-      { path: '/',         element: <RecipesPage /> },
+      { path: '/',         element: <Navigate to="/recipes" replace /> },
       { path: '/share-target', element: <ShareTargetPage /> },
     ],
   },
