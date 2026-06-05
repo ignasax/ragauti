@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo } from 'react'
 import { X, Search, Utensils } from 'lucide-react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
@@ -11,10 +11,28 @@ interface RecipePickerProps {
 export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
   const { data: recipes = [] } = useRecipes()
   const [search, setSearch] = useState('')
+  const sheetRef = useRef<HTMLDivElement>(null)
 
+  // Keep sheet anchored above keyboard on both iOS and Android
   useEffect(() => {
-    document.body.style.overflow = 'hidden'
-    return () => { document.body.style.overflow = '' }
+    const sheet = sheetRef.current
+    const vv = window.visualViewport
+    if (!sheet || !vv) return
+
+    const update = () => {
+      sheet.style.maxHeight = `${vv.height * 0.85}px`
+      // On iOS, window.innerHeight stays fixed; vv.height shrinks → push sheet up
+      const offset = window.innerHeight - vv.height - vv.offsetTop
+      sheet.style.bottom = `${Math.max(0, offset)}px`
+    }
+
+    vv.addEventListener('resize', update)
+    vv.addEventListener('scroll', update)
+    update()
+    return () => {
+      vv.removeEventListener('resize', update)
+      vv.removeEventListener('scroll', update)
+    }
   }, [])
 
   useEffect(() => {
@@ -34,21 +52,22 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
     <>
       <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm" onClick={onClose} />
       <div
+        ref={sheetRef}
         className="fixed bottom-0 inset-x-0 z-50 bg-warm-card rounded-t-2xl flex flex-col"
-        style={{ maxHeight: '80svh', paddingBottom: 'env(safe-area-inset-bottom)' }}
+        style={{ maxHeight: '85svh', paddingBottom: 'env(safe-area-inset-bottom)' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="recipe-picker-title"
       >
-        <div className="w-8 h-1 bg-warm-border rounded-full mx-auto mt-3 mb-2" />
-        <div className="flex items-center justify-between px-4 pb-3">
+        <div className="w-8 h-1 bg-warm-border rounded-full mx-auto mt-3 mb-2 flex-shrink-0" />
+        <div className="flex items-center justify-between px-4 pb-3 flex-shrink-0">
           <h2 id="recipe-picker-title" className="font-serif text-lg font-bold text-warm-primary">Choose Recipe</h2>
           <button onClick={onClose} aria-label="Close"
             className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation">
             <X className="w-5 h-5 text-warm-secondary" />
           </button>
         </div>
-        <div className="px-4 pb-3">
+        <div className="px-4 pb-3 flex-shrink-0">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-warm-muted" aria-hidden="true" />
             <input
@@ -65,8 +84,8 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
             <button key={r.id} onClick={() => onSelect(r)}
               className="flex items-center gap-3 p-3 rounded-xl bg-warm-base active:bg-warm-surface transition-colors min-h-[56px] cursor-pointer touch-manipulation text-left w-full">
               <div className="w-10 h-10 rounded-lg bg-warm-surface overflow-hidden flex-shrink-0">
-                {r.image_url
-                  ? <img src={r.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                {(r.image_urls?.[0] ?? r.image_url)
+                  ? <img src={r.image_urls?.[0] ?? r.image_url!} alt="" className="w-full h-full object-cover" loading="lazy" />
                   : <div aria-hidden="true" className="w-full h-full flex items-center justify-center"><Utensils className="w-5 h-5 text-warm-muted" /></div>
                 }
               </div>

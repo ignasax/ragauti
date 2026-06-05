@@ -30,7 +30,7 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
           <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {totalMins > 0 && <span className="font-sans text-warm-secondary text-xs">{totalMins} min</span>}
             {totalMins > 0 && (recipe.rating || recipe.servings) && <span className="text-warm-border text-xs">·</span>}
-            {recipe.rating ? <span className="font-sans text-warm-secondary text-xs">{'★'.repeat(recipe.rating)}</span> : null}
+            {recipe.rating ? <span className="font-sans text-warm-secondary text-xs">{'★'.repeat(Math.min(3, recipe.rating))}</span> : null}
             {recipe.rating && recipe.servings ? <span className="text-warm-border text-xs">·</span> : null}
             {recipe.servings ? (
               <span className="flex items-center gap-0.5">

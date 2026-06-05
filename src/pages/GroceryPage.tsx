@@ -96,7 +96,7 @@ export function GroceryPage() {
             <button
               onClick={() => setConfirmClear(true)}
               aria-label="Clear all"
-              className="bg-warm-surface border border-warm-border text-warm-secondary min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
+              className="bg-warm-accent text-white min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-80 cursor-pointer touch-manipulation">
               <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
