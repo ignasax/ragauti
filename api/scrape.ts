@@ -21,13 +21,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   try {
-    const response = await fetch(raw, {
-      headers: { 'User-Agent': 'Mozilla/5.0 (compatible; RecipeScraper/1.0)' },
-      signal: AbortSignal.timeout(10_000),
-      redirect: 'follow',
+    const response = await fetch(`https://r.jina.ai/${raw}`, {
+      headers: {
+        'Accept': 'text/plain',
+        'X-Respond-With': 'markdown',
+      },
+      signal: AbortSignal.timeout(20_000),
     })
-    const html = await response.text()
-    return res.status(200).json({ html: html.slice(0, 150_000) })
+    if (!response.ok) {
+      return res.status(502).json({ error: `Jina reader returned ${response.status}` })
+    }
+    const text = await response.text()
+    return res.status(200).json({ html: text })
   } catch (err) {
     console.error('[scrape] fetch error:', err)
     return res.status(500).json({ error: 'Failed to fetch URL' })

@@ -106,7 +106,7 @@ export async function extractRecipe(html: string, key: string): Promise<Extracte
   const fromLd = extractFromJsonLd(html)
   if (fromLd && required.every(k => fromLd[k])) return fromLd
 
-  const text = htmlToText(html).slice(0, 50_000)
+  const text = html.slice(0, 50_000)
   const prompt = `This is the text content of a recipe web page. Ignore any blog stories, comments, ads, or unrelated content. Find and extract ONLY the recipe information.
 
 Return ONLY a valid JSON object with these fields (omit fields you cannot find):
