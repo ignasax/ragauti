@@ -134,10 +134,10 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
           <label className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Servings</label>
           <div className={`${inputCls} flex items-center justify-between px-2`}>
             <button type="button" onClick={() => set('servings', Math.max(1, (data.servings ?? 1) - 1))}
-              className="w-8 h-8 flex items-center justify-center text-warm-primary font-bold text-lg cursor-pointer touch-manipulation">−</button>
+              className="px-1 text-warm-primary font-bold text-lg leading-none cursor-pointer touch-manipulation">−</button>
             <span className="font-sans text-warm-primary text-base w-6 text-center">{data.servings ?? 1}</span>
             <button type="button" onClick={() => set('servings', Math.min(10, (data.servings ?? 1) + 1))}
-              className="w-8 h-8 flex items-center justify-center text-warm-primary font-bold text-lg cursor-pointer touch-manipulation">+</button>
+              className="px-1 text-warm-primary font-bold text-lg leading-none cursor-pointer touch-manipulation">+</button>
           </div>
         </div>
       </div>
