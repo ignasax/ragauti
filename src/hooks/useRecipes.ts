@@ -65,6 +65,17 @@ export function useToggleFavourite() {
         .from('recipes').update({ is_favourite }).eq('id', id)
       if (error) throw error
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
+    onMutate: async ({ id, is_favourite }) => {
+      await qc.cancelQueries({ queryKey: ['recipes'] })
+      const previous = qc.getQueryData<Recipe[]>(['recipes'])
+      qc.setQueryData<Recipe[]>(['recipes'], old =>
+        old?.map(r => r.id === id ? { ...r, is_favourite } : r) ?? []
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['recipes'], ctx.previous)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
   })
 }
