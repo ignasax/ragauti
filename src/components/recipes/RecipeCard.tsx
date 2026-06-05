@@ -3,13 +3,17 @@ import { Heart, Utensils } from 'lucide-react'
 import { useToggleFavourite } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
 
-interface RecipeCardProps { recipe: Recipe; ingredientSearch?: string }
+interface RecipeCardProps { recipe: Recipe; ingredientTerms?: string[] }
 
-export function RecipeCard({ recipe, ingredientSearch }: RecipeCardProps) {
+export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
   const { mutate: toggleFav } = useToggleFavourite()
 
-  const matchedIngredients = ingredientSearch
-    ? recipe.ingredients.split('\n').filter(l => l.trim() && l.toLowerCase().includes(ingredientSearch.toLowerCase())).slice(0, 3)
+  const totalMins = (recipe.prep_time_mins ?? 0) + (recipe.cook_time_mins ?? 0)
+
+  const matchedIngredients = ingredientTerms?.length
+    ? recipe.ingredients.split('\n').filter(l =>
+        l.trim() && ingredientTerms.some(term => l.toLowerCase().includes(term.toLowerCase()))
+      ).slice(0, 3)
     : []
 
   return (
@@ -24,7 +28,7 @@ export function RecipeCard({ recipe, ingredientSearch }: RecipeCardProps) {
         <div className="p-3">
           <h3 className="font-sans font-semibold text-warm-primary text-sm leading-snug line-clamp-2">{recipe.title}</h3>
           <p className="font-sans text-warm-secondary text-xs mt-1">
-            {[recipe.cook_time_mins ? `${recipe.cook_time_mins} min` : '', recipe.rating ? '★'.repeat(recipe.rating) : ''].filter(Boolean).join(' · ')}
+            {[totalMins ? `${totalMins} min` : '', recipe.rating ? '★'.repeat(recipe.rating) : ''].filter(Boolean).join(' · ')}
           </p>
           {matchedIngredients.length > 0 && (
             <ul className="mt-1.5 flex flex-col gap-0.5" aria-label="Matched ingredients">

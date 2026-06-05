@@ -81,7 +81,13 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         </div>
         <div className="flex-1">
           <label htmlFor="servings" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Servings</label>
-          <input id="servings" type="number" min={1} value={data.servings ?? ''} onChange={e => set('servings', e.target.value ? parseInt(e.target.value) : null)} className={inputCls} />
+          <select id="servings" value={data.servings ?? ''} onChange={e => set('servings', e.target.value ? parseInt(e.target.value) : null)} className={inputCls}>
+            <option value="">—</option>
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+          </select>
         </div>
       </div>
       <div>

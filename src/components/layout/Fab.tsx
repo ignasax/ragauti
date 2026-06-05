@@ -3,7 +3,6 @@ import { Plus } from 'lucide-react'
 
 const fabRoutes: Record<string, { label: string; action: string }> = {
   '/recipes': { label: 'Add recipe', action: '/recipes/new' },
-  '/grocery':  { label: 'Add item',   action: '/grocery?add=1' },
 }
 
 export function Fab() {

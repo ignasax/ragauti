@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
-import { Trash2 } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useGroceryList, useGenerateGroceryList, useAddGroceryItem, useDeleteAllGroceryItems } from '../hooks/useGroceryList'
 import { getMondayOf } from '../hooks/useMealPlan'
 import { GroceryGroup } from '../components/grocery/GroceryGroup'
@@ -13,43 +12,40 @@ export function GroceryPage() {
   const { mutate: addItem } = useAddGroceryItem(weekStart)
   const { mutate: deleteAll } = useDeleteAllGroceryItems(weekStart)
 
-  const location = useLocation()
-  const navigate = useNavigate()
-  const showAddOverlay = new URLSearchParams(location.search).get('add') === '1'
-
   const [confirmRegen, setConfirmRegen] = useState(false)
   const [confirmClear, setConfirmClear] = useState(false)
+  const [fabExpanded, setFabExpanded] = useState(false)
   const [addText, setAddText] = useState('')
-  const addInputRef = useRef<HTMLInputElement>(null)
+  const fabInputRef = useRef<HTMLInputElement>(null)
 
-  // Lock scroll when any modal is open
+  // Lock scroll when any modal open
   useEffect(() => {
-    if (confirmRegen || confirmClear || showAddOverlay) {
+    if (confirmRegen || confirmClear) {
       document.body.style.overflow = 'hidden'
       return () => { document.body.style.overflow = '' }
     }
-  }, [confirmRegen, confirmClear, showAddOverlay])
+  }, [confirmRegen, confirmClear])
 
-  // Focus add input when overlay opens
+  // Focus input when FAB expands
   useEffect(() => {
-    if (showAddOverlay) {
-      setTimeout(() => addInputRef.current?.focus(), 50)
+    if (fabExpanded) {
+      setTimeout(() => fabInputRef.current?.focus(), 150)
     } else {
       setAddText('')
     }
-  }, [showAddOverlay])
+  }, [fabExpanded])
 
-  // Escape key closes modals
+  // Escape closes modals and FAB
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== 'Escape') return
-      if (showAddOverlay) navigate('/grocery', { replace: true })
+      if (fabExpanded) setFabExpanded(false)
       else if (confirmRegen) setConfirmRegen(false)
       else if (confirmClear) setConfirmClear(false)
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
-  }, [showAddOverlay, confirmRegen, confirmClear, navigate])
+  }, [fabExpanded, confirmRegen, confirmClear])
 
   const grouped = new Map<string, { title: string; items: GroceryItem[] }>()
   const other: GroceryItem[] = []
@@ -65,12 +61,19 @@ export function GroceryPage() {
     await generate()
   }
 
-  const handleAddItem = () => {
-    const text = addText.trim()
-    if (!text) return
-    addItem(text)
-    setAddText('')
-    navigate('/grocery', { replace: true })
+  const handleFabClick = () => {
+    if (!fabExpanded) {
+      setFabExpanded(true)
+    } else {
+      const text = addText.trim()
+      if (text) {
+        addItem(text)
+        setAddText('')
+        setFabExpanded(false)
+      } else {
+        setFabExpanded(false)
+      }
+    }
   }
 
   const handleClearAll = () => {
@@ -86,10 +89,8 @@ export function GroceryPage() {
           {items.length > 0 && (
             <button
               onClick={() => setConfirmClear(true)}
-              aria-label="Clear all items"
-              className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 transition-opacity cursor-pointer touch-manipulation"
-            >
-              <Trash2 className="w-5 h-5 text-warm-muted" />
+              className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] active:opacity-80 cursor-pointer touch-manipulation whitespace-nowrap opacity-70">
+              Clear all
             </button>
           )}
           <button
@@ -111,7 +112,7 @@ export function GroceryPage() {
           <p className="font-sans text-warm-muted text-sm">Add recipes to your meal plan first, then generate the list</p>
         </div>
       ) : (
-        <div className="flex flex-col gap-4 pb-24">
+        <div className="flex flex-col gap-4 pb-28">
           {[...grouped.entries()].map(([recipeId, group]) => (
             <GroceryGroup key={recipeId} title={group.title} items={group.items} weekStart={weekStart} />
           ))}
@@ -119,40 +120,40 @@ export function GroceryPage() {
         </div>
       )}
 
-      {/* Add item overlay */}
-      {showAddOverlay && (
-        <div className="fixed inset-0 z-40 flex items-end"
-          onClick={() => navigate('/grocery', { replace: true })}>
-          <div className="absolute inset-0 bg-warm-primary/30 backdrop-blur-sm" />
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-label="Add grocery item"
-            className="relative bg-warm-card w-full rounded-t-2xl p-5 flex flex-col gap-3"
-            style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="w-8 h-1 bg-warm-border rounded-full mx-auto mb-1" />
-            <h2 className="font-serif text-lg font-bold text-warm-primary">Add item</h2>
+      {/* Inline-expanding FAB */}
+      <div
+        className="fixed z-20 flex items-center justify-end"
+        style={{ bottom: 'calc(60px + env(safe-area-inset-bottom) + 16px)', right: '1rem' }}
+      >
+        <div
+          className="flex items-center bg-warm-accent rounded-full shadow-lg overflow-hidden"
+          style={{
+            width: fabExpanded ? 'calc(100vw - 2rem)' : '3.5rem',
+            height: '3.5rem',
+            transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        >
+          {fabExpanded && (
             <input
-              ref={addInputRef}
+              ref={fabInputRef}
               value={addText}
               onChange={e => setAddText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleAddItem() }}
-              placeholder="e.g. Olive oil"
-              aria-label="Item name"
-              className="w-full bg-warm-surface border border-warm-border rounded-xl px-4 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]"
+              onKeyDown={e => { if (e.key === 'Enter') handleFabClick() }}
+              placeholder="Add item…"
+              aria-label="New grocery item"
+              className="flex-1 bg-transparent text-white placeholder:text-white/60 font-sans text-base pl-4 focus:outline-none min-w-0"
             />
-            <button
-              onClick={handleAddItem}
-              disabled={!addText.trim()}
-              className="w-full bg-warm-accent text-white font-sans font-semibold text-sm py-3 rounded-xl min-h-[44px] active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation"
-            >
-              Add to list
-            </button>
-          </div>
+          )}
+          <button
+            type="button"
+            onClick={handleFabClick}
+            aria-label={fabExpanded ? 'Add item' : 'Add grocery item'}
+            className="w-14 h-14 flex-shrink-0 flex items-center justify-center text-white active:opacity-80 touch-manipulation cursor-pointer"
+          >
+            <Plus className="w-6 h-6" aria-hidden="true" />
+          </button>
         </div>
-      )}
+      </div>
 
       {/* Regenerate confirm */}
       {confirmRegen && (

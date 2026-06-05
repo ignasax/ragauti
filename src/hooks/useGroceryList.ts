@@ -146,6 +146,28 @@ export function useDeleteAllGroceryItems(weekStart: string) {
   })
 }
 
+export function useDeleteGroceryItem() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ id }: { id: string; week_start: string }) => {
+      const { error } = await supabase.from('grocery_items').delete().eq('id', id)
+      if (error) throw error
+    },
+    onMutate: async ({ id, week_start }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', week_start] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', week_start])
+      qc.setQueryData<GroceryItem[]>(['grocery', week_start], old =>
+        old?.filter(item => item.id !== id) ?? []
+      )
+      return { previous, week_start }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', ctx.week_start], ctx.previous)
+    },
+    onSettled: (_data, _err, vars) => qc.invalidateQueries({ queryKey: ['grocery', vars.week_start] }),
+  })
+}
+
 export function useAddGroceryItem(weekStart: string) {
   const qc = useQueryClient()
   return useMutation({

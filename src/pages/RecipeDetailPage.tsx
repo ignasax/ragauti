@@ -66,8 +66,10 @@ export function RecipeDetailPage() {
       <div className="px-4 pt-4 pb-2">
         <h1 className="font-serif text-2xl font-bold text-warm-primary mb-1">{recipe.title}</h1>
         <div className="flex flex-wrap gap-3 font-sans text-warm-secondary text-sm">
-          {recipe.prep_time_mins && <span>Prep {recipe.prep_time_mins} min</span>}
-          {recipe.cook_time_mins && <span>Cook {recipe.cook_time_mins} min</span>}
+          {(recipe.prep_time_mins || recipe.cook_time_mins) && (
+            <span>{(recipe.prep_time_mins ?? 0) + (recipe.cook_time_mins ?? 0)} min total</span>
+          )}
+          {recipe.servings && <span>{recipe.servings} servings</span>}
           {recipe.rating && <span>{'★'.repeat(Math.max(0, Math.floor(recipe.rating ?? 0)))}</span>}
         </div>
         {(recipe.categories?.length ?? 0) > 0 && (
