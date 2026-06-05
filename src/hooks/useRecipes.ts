@@ -20,7 +20,9 @@ export function useAddRecipe() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (recipe: Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      const { data, error } = await supabase.from('recipes').insert(recipe).select().single()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
+      const { data, error } = await supabase.from('recipes').insert({ ...recipe, user_id: user.id }).select().single()
       if (error) throw error
       return data as Recipe
     },

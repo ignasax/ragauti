@@ -53,7 +53,9 @@ export function useGenerateGroceryList(weekStart: string) {
 
       // 4. Insert new items
       if (items.length) {
-        const { error: insertError } = await supabase.from('grocery_items').insert(items)
+        const { data: { user } } = await supabase.auth.getUser()
+        if (!user) throw new Error('Not authenticated')
+        const { error: insertError } = await supabase.from('grocery_items').insert(items.map(i => ({ ...i, user_id: user.id })))
         if (insertError) throw insertError
       }
     },
@@ -77,8 +79,10 @@ export function useAddGroceryItem(weekStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async (text: string) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
       const { error } = await supabase.from('grocery_items').insert({
-        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Date.now(),
+        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Date.now(), user_id: user.id,
       })
       if (error) throw error
     },

@@ -24,9 +24,11 @@ export function useAddMealSlot() {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ slot_date, meal_type, recipe_id }: { slot_date: string; meal_type: 'lunch' | 'dinner'; recipe_id: string }) => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('meal_plan_slots')
-        .upsert({ slot_date, meal_type, recipe_id }, { onConflict: 'user_id,slot_date,meal_type' })
+        .upsert({ slot_date, meal_type, recipe_id, user_id: user.id }, { onConflict: 'user_id,slot_date,meal_type' })
       if (error) throw error
     },
     onSuccess: (_d, v) => qc.invalidateQueries({ queryKey: ['meal-plan', getMondayOf(v.slot_date)] }),
