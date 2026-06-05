@@ -31,11 +31,11 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
   )
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end">
-      <div className="absolute inset-0 bg-warm-primary/30 backdrop-blur-sm" onClick={onClose} />
+    <>
+      <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm" onClick={onClose} />
       <div
-        className="relative bg-warm-card w-full rounded-t-2xl flex flex-col max-h-[80svh]"
-        style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        className="fixed bottom-0 inset-x-0 z-50 bg-warm-card rounded-t-2xl flex flex-col"
+        style={{ maxHeight: '80svh', paddingBottom: 'env(safe-area-inset-bottom)' }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="recipe-picker-title"
@@ -80,6 +80,6 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
           )}
         </div>
       </div>
-    </div>
+    </>
   )
 }

@@ -107,29 +107,16 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
 
       <div>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Images</span>
-        {allPreviews.length > 0 && (
-          <div className="flex gap-2 overflow-x-auto pb-2 mb-2" style={{ scrollbarWidth: 'none' }}>
-            {allPreviews.map((src, i) => (
-              <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden">
-                <img src={src} alt="" className="w-full h-full object-cover" />
-                <button type="button" onClick={() => removeImage(i)} aria-label="Remove image"
-                  className="absolute top-1 right-1 w-6 h-6 bg-warm-base/80 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
-                  <X className="w-3 h-3 text-warm-primary" />
-                </button>
-              </div>
-            ))}
-          </div>
-        )}
-        <div className="flex gap-2">
+        <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
           <label htmlFor="image-camera"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
             <Camera className="w-4 h-4" aria-hidden="true" />
             Take Photo
           </label>
           <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
             onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
           <label htmlFor="image-gallery"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
             <ImagePlus className="w-4 h-4" aria-hidden="true" />
             Choose File
           </label>
@@ -139,6 +126,15 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
               files.forEach(f => handleImageFile(f))
               e.target.value = ''
             }} />
+          {allPreviews.map((src, i) => (
+            <div key={i} className="relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden self-center">
+              <img src={src} alt="" className="w-full h-full object-cover" />
+              <button type="button" onClick={() => removeImage(i)} aria-label="Remove image"
+                className="absolute inset-0 flex items-center justify-center bg-warm-base/60 opacity-0 hover:opacity-100 active:opacity-100 cursor-pointer touch-manipulation">
+                <X className="w-3 h-3 text-warm-primary" />
+              </button>
+            </div>
+          ))}
         </div>
       </div>
 
@@ -165,7 +161,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       <div>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Rating</span>
         <div className="flex gap-2">
-          {[3,4,5].map(n => (
+          {[1,2,3].map(n => (
             <button key={n} type="button" onClick={() => set('rating', data.rating === n ? null : n)}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation" aria-label={`${n} star`}>
               <Star className={`w-6 h-6 ${(data.rating ?? 0) >= n ? 'text-warm-accent fill-warm-accent' : 'text-warm-muted'}`} />

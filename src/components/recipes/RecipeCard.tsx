@@ -28,7 +28,7 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
         <div className="p-3">
           <h3 className="font-sans font-semibold text-warm-primary text-sm leading-snug line-clamp-2">{recipe.title}</h3>
           <p className="font-sans text-warm-secondary text-xs mt-1">
-            {[totalMins ? `${totalMins} min` : '', recipe.rating ? '★'.repeat(recipe.rating) : ''].filter(Boolean).join(' · ')}
+            {[totalMins ? `${totalMins} min` : '', recipe.rating ? '★'.repeat(recipe.rating) : '', recipe.servings ? `${recipe.servings} srv` : ''].filter(Boolean).join(' · ')}
           </p>
           {matchedIngredients.length > 0 && (
             <ul className="mt-1.5 flex flex-col gap-0.5" aria-label="Matched ingredients">

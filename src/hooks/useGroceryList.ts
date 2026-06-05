@@ -21,13 +21,14 @@ export function useGenerateGroceryList(weekStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekEnd.getDate() + 6)
+      const [y, m, d] = weekStart.split('-').map(Number)
+      const weekEnd = new Date(y, m - 1, d + 6)
+      const weekEndStr = `${weekEnd.getFullYear()}-${String(weekEnd.getMonth() + 1).padStart(2, '0')}-${String(weekEnd.getDate()).padStart(2, '0')}`
       const { data: slots, error } = await supabase
         .from('meal_plan_slots')
         .select('*, recipe:recipes(id, title, ingredients)')
         .gte('slot_date', weekStart)
-        .lte('slot_date', weekEnd.toISOString().split('T')[0])
+        .lte('slot_date', weekEndStr)
       if (error) throw error
 
       const items: Omit<GroceryItem, 'id' | 'user_id' | 'created_at' | 'recipe'>[] = []

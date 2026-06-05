@@ -17,8 +17,8 @@ export function FilterChips({ filters, allCategories, onChange }: FilterChipsPro
       {/* Row 1: Favourites · Stars (3-5) · Clear */}
       <div className={scrollRow} style={scrollStyle}>
         <button onClick={() => onChange({ ...filters, favouritesOnly: !filters.favouritesOnly })}
-          className={chip(!!filters.favouritesOnly)}>♥ Favourites</button>
-        {[3, 4, 5].map(n => (
+          className={chip(!!filters.favouritesOnly)}>♥</button>
+        {[1, 2, 3].map(n => (
           <button key={n} onClick={() => onChange({ ...filters, rating: filters.rating === n ? undefined : n })}
             className={chip(filters.rating === n)}>{'★'.repeat(n)}</button>
         ))}

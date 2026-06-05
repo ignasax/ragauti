@@ -103,8 +103,8 @@ export function RecipeDetailPage() {
         <div className="flex flex-wrap gap-3 font-sans text-warm-secondary text-sm">
           {recipe.prep_time_mins ? <span>Prep {recipe.prep_time_mins} min</span> : null}
           {recipe.cook_time_mins ? <span>Cook {recipe.cook_time_mins} min</span> : null}
-          {recipe.servings && <span>{recipe.servings} servings</span>}
-          {recipe.rating && <span>{'★'.repeat(Math.max(0, Math.floor(recipe.rating ?? 0)))}</span>}
+          {recipe.rating ? <span>{'★'.repeat(Math.min(3, Math.max(0, Math.floor(recipe.rating))))}</span> : null}
+          {recipe.servings ? <span>{recipe.servings} srv</span> : null}
         </div>
         {(recipe.categories?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">

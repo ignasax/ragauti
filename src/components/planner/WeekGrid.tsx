@@ -8,7 +8,6 @@ const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 export function WeekGrid({ windowStart }: WeekGridProps) {
   const { data: slots = [] } = useMealPlan(windowStart)
   const today = getLocalDateStr(0)
-  const yesterday = getLocalDateStr(-1)
 
   const [startY, startM, startD] = windowStart.split('-').map(Number)
   const days = Array.from({ length: 7 }, (_, i) => {
@@ -16,7 +15,6 @@ export function WeekGrid({ windowStart }: WeekGridProps) {
     const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     let label: string
     if (date === today) label = 'Today'
-    else if (date === yesterday) label = 'Yest'
     else label = `${SHORT_DAYS[d.getDay()]} ${d.getDate()}`
     return { label, date, isToday: date === today }
   })

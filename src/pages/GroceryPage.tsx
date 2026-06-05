@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { Plus, X, RefreshCcw, Trash2 } from 'lucide-react'
 import { useGroceryList, useGenerateGroceryList, useAddGroceryItem, useDeleteAllGroceryItems } from '../hooks/useGroceryList'
-import { getMondayOf } from '../hooks/useMealPlan'
+import { getLocalDateStr } from '../hooks/useMealPlan'
 import { GroceryGroup } from '../components/grocery/GroceryGroup'
 import type { GroceryItem } from '../types/app'
 
 export function GroceryPage() {
-  const weekStart = getMondayOf(new Date().toISOString().split('T')[0])
+  const weekStart = getLocalDateStr(0)
   const { data: items = [], isLoading } = useGroceryList(weekStart)
   const { mutateAsync: generate, isPending: isGenerating } = useGenerateGroceryList(weekStart)
   const { mutate: addItem } = useAddGroceryItem(weekStart)
@@ -89,14 +89,14 @@ export function GroceryPage() {
             onClick={() => items.length > 0 ? setConfirmRegen(true) : handleGenerate()}
             disabled={isGenerating}
             aria-label={isGenerating ? 'Generating…' : 'Generate weekly list'}
-            className="bg-warm-accent text-white min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
+            className="bg-warm-surface border border-warm-border text-warm-accent min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 disabled:opacity-50 cursor-pointer touch-manipulation">
             <RefreshCcw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
           {items.length > 0 && (
             <button
               onClick={() => setConfirmClear(true)}
               aria-label="Clear all"
-              className="bg-warm-surface border border-warm-border text-warm-secondary min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
+              className="bg-warm-surface border border-warm-border text-warm-accent min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
               <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
