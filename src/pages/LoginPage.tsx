@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { UtensilsCrossed, CalendarDays, ShoppingCart } from 'lucide-react'
+import { UtensilsCrossed, CalendarDays, ShoppingCart, Share } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { TermsModal } from '../components/TermsModal'
@@ -49,6 +49,17 @@ export function LoginPage() {
               <p className="font-sans text-warm-primary text-sm leading-snug">{text}</p>
             </div>
           ))}
+        </div>
+
+        {/* Install tip */}
+        <div className="w-full bg-warm-surface border border-warm-border rounded-xl px-4 py-3 flex items-start gap-3">
+          <Share className="w-4 h-4 text-warm-accent mt-0.5 shrink-0" aria-hidden="true" />
+          <div className="flex flex-col gap-0.5">
+            <p className="font-sans font-semibold text-warm-primary text-sm">Install as an app</p>
+            <p className="font-sans text-warm-secondary text-xs leading-relaxed">
+              Open <span className="font-medium">ragauti.vercel.app</span> in Chrome or Safari, tap <span className="font-medium">Share → Add to Home Screen</span>. Full screen, no browser bar, real app icon.
+            </p>
+          </div>
         </div>
 
         {/* Sign in */}
