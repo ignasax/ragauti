@@ -3,9 +3,11 @@ import { htmlToText, extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe 
 export async function extractRecipeWithGroq(html: string, key: string): Promise<ExtractedRecipe> {
   const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
   const fromLd = extractFromJsonLd(html)
+  console.log('[groq] JSON-LD result:', fromLd)
   if (fromLd && required.every(k => fromLd[k])) return fromLd
 
   const text = htmlToText(html).slice(0, 25_000)
+  console.log('[groq] text length:', text.length, 'preview:', text.slice(0, 300))
 
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
@@ -58,6 +60,7 @@ ${text}`,
 
   const data = await res.json()
   const content = (data.choices?.[0]?.message?.content ?? '') as string
+  console.log('[groq] response:', content)
 
   try {
     return sanitizeExtracted(JSON.parse(content))
