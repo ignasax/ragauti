@@ -63,7 +63,7 @@ export function PrivacyModal({ onClose }: Props) {
 
           <section>
             <h3 className="font-semibold text-warm-primary mb-1">Contact</h3>
-            <p>Questions about your data: open an issue at the project repository or email the listed maintainer.</p>
+            <p>Questions about your data: <a href="mailto:papa@papabuild.app" className="text-warm-accent underline underline-offset-2">papa@papabuild.app</a></p>
           </section>
         </div>
       </div>
