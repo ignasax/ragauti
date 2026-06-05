@@ -34,7 +34,10 @@ export function RecipesPage() {
 
   return (
     <div className="px-4 pt-4 flex flex-col gap-3">
-      <h1 className="font-serif text-2xl font-bold text-warm-primary">Recipes</h1>
+      <div className="flex items-center gap-2.5">
+        <img src="/icons/icon-192.png" alt="" aria-hidden="true" className="w-8 h-8 rounded-lg" />
+        <h1 className="font-serif text-2xl font-bold text-warm-primary">Ragauti</h1>
+      </div>
       <div className="flex flex-col gap-2">
         <SearchBar
           value={search}
