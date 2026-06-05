@@ -25,24 +25,26 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
   if (slot?.recipe) {
     return (
       <>
-        <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px] flex items-center px-2 gap-2">
+        <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px]">
+          <button
+            onClick={() => removeSlot({ id: slot.id, slot_date: date })}
+            aria-label="Remove from plan"
+            className="absolute top-1 right-1 z-10 w-6 h-6 bg-warm-base/80 rounded-full flex items-center justify-center cursor-pointer touch-manipulation"
+          >
+            <X className="w-3 h-3 text-warm-secondary" />
+          </button>
           <Link
             to={`/recipes/${slot.recipe.id}`}
-            className="flex items-center gap-2 flex-1 min-w-0 py-2 min-h-[80px] active:opacity-70 transition-opacity"
+            className="flex items-center gap-2 p-2 pr-7 min-h-[80px] active:opacity-70 transition-opacity"
           >
-            <div className="w-10 h-10 rounded-lg bg-warm-border overflow-hidden flex-shrink-0">
+            <div className="w-8 h-8 rounded-md bg-warm-border overflow-hidden flex-shrink-0">
               {slot.recipe.image_url
                 ? <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-4 h-4 text-warm-muted" /></div>
+                : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-3.5 h-3.5 text-warm-muted" /></div>
               }
             </div>
-            <span className="font-sans text-[15px] font-bold text-warm-primary line-clamp-2 flex-1 leading-snug">{slot.recipe.title}</span>
+            <span className="font-sans text-[13px] font-semibold text-warm-primary line-clamp-3 flex-1 leading-snug">{slot.recipe.title}</span>
           </Link>
-          <button onClick={() => removeSlot({ id: slot.id, slot_date: date })}
-            aria-label="Remove from plan"
-            className="min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation">
-            <X className="w-3.5 h-3.5 text-warm-muted" />
-          </button>
         </div>
         {picking && <RecipePicker onSelect={handleSelect} onClose={() => setPicking(false)} />}
       </>
