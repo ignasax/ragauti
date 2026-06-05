@@ -27,13 +27,13 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
         </div>
         <div className="p-3">
           <h3 className="font-sans font-semibold text-warm-primary text-sm leading-snug line-clamp-2">{recipe.title}</h3>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+          <div className="flex items-center gap-1.5 mt-1 overflow-hidden">
             {totalMins > 0 && <span className="font-sans text-warm-secondary text-xs">{totalMins} min</span>}
             {totalMins > 0 && (recipe.rating || recipe.servings) && <span className="text-warm-border text-xs">·</span>}
             {recipe.rating ? <span className="font-sans text-warm-secondary text-xs">{'★'.repeat(Math.min(3, recipe.rating))}</span> : null}
             {recipe.rating && recipe.servings ? <span className="text-warm-border text-xs">·</span> : null}
             {recipe.servings ? (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5 flex-shrink-0">
                 {Array.from({ length: recipe.servings }).map((_, i) => (
                   <User key={i} className="w-2.5 h-2.5 text-warm-secondary" aria-hidden="true" />
                 ))}

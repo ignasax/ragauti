@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { X, Search, Utensils } from 'lucide-react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
@@ -11,29 +11,6 @@ interface RecipePickerProps {
 export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
   const { data: recipes = [] } = useRecipes()
   const [search, setSearch] = useState('')
-  const sheetRef = useRef<HTMLDivElement>(null)
-
-  // Keep sheet anchored above keyboard on both iOS and Android
-  useEffect(() => {
-    const sheet = sheetRef.current
-    const vv = window.visualViewport
-    if (!sheet || !vv) return
-
-    const update = () => {
-      sheet.style.maxHeight = `${vv.height * 0.85}px`
-      // On iOS, window.innerHeight stays fixed; vv.height shrinks → push sheet up
-      const offset = window.innerHeight - vv.height - vv.offsetTop
-      sheet.style.bottom = `${Math.max(0, offset)}px`
-    }
-
-    vv.addEventListener('resize', update)
-    vv.addEventListener('scroll', update)
-    update()
-    return () => {
-      vv.removeEventListener('resize', update)
-      vv.removeEventListener('scroll', update)
-    }
-  }, [])
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
@@ -52,7 +29,6 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
     <>
       <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm" onClick={onClose} />
       <div
-        ref={sheetRef}
         className="fixed bottom-0 inset-x-0 z-50 bg-warm-card rounded-t-2xl flex flex-col"
         style={{ maxHeight: '85svh', paddingBottom: 'env(safe-area-inset-bottom)' }}
         role="dialog"
