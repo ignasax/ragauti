@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Plus, X } from 'lucide-react'
-
+import { Plus, X, Utensils } from 'lucide-react'
 import { RecipePicker } from './RecipePicker'
 import { useAddMealSlot, useRemoveMealSlot } from '../../hooks/useMealPlan'
 import type { MealPlanSlot, Recipe } from '../../types/app'
@@ -29,9 +28,15 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
         <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px] flex items-center px-2 gap-2">
           <Link
             to={`/recipes/${slot.recipe.id}`}
-            className="flex items-center flex-1 min-w-0 py-2 min-h-[80px] active:opacity-70 transition-opacity"
+            className="flex items-center gap-2 flex-1 min-w-0 py-2 min-h-[80px] active:opacity-70 transition-opacity"
           >
-            <span className="font-sans text-[15px] font-bold text-warm-primary line-clamp-3 flex-1 leading-snug">{slot.recipe.title}</span>
+            <div className="w-10 h-10 rounded-lg bg-warm-border overflow-hidden flex-shrink-0">
+              {slot.recipe.image_url
+                ? <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+                : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-4 h-4 text-warm-muted" /></div>
+              }
+            </div>
+            <span className="font-sans text-[15px] font-bold text-warm-primary line-clamp-2 flex-1 leading-snug">{slot.recipe.title}</span>
           </Link>
           <button onClick={() => removeSlot({ id: slot.id, slot_date: date })}
             aria-label="Remove from plan"
