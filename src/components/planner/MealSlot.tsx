@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { Plus, X } from 'lucide-react'
 import { RecipePicker } from './RecipePicker'
 import { useAddMealSlot, useRemoveMealSlot } from '../../hooks/useMealPlan'
@@ -8,12 +9,13 @@ interface MealSlotProps {
   date: string
   mealType: 'lunch' | 'dinner'
   slot?: MealPlanSlot
+  windowStart: string
 }
 
-export function MealSlot({ date, mealType, slot }: MealSlotProps) {
+export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
   const [picking, setPicking] = useState(false)
-  const { mutate: addSlot } = useAddMealSlot()
-  const { mutate: removeSlot } = useRemoveMealSlot()
+  const { mutate: addSlot } = useAddMealSlot(windowStart)
+  const { mutate: removeSlot } = useRemoveMealSlot(windowStart)
 
   const handleSelect = (recipe: Recipe) => {
     addSlot({ slot_date: date, meal_type: mealType, recipe_id: recipe.id })
@@ -24,12 +26,17 @@ export function MealSlot({ date, mealType, slot }: MealSlotProps) {
     return (
       <>
         <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px] flex items-center px-2 gap-2">
-          {slot.recipe.image_url && (
-            <div className="w-8 h-8 rounded flex-shrink-0 overflow-hidden">
-              <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-            </div>
-          )}
-          <span className="font-sans text-sm text-warm-primary line-clamp-2 flex-1 leading-tight">{slot.recipe.title}</span>
+          <Link
+            to={`/recipes/${slot.recipe.id}`}
+            className="flex items-center gap-2 flex-1 min-w-0 py-2 min-h-[80px] active:opacity-70 transition-opacity"
+          >
+            {slot.recipe.image_url && (
+              <div className="w-8 h-8 rounded flex-shrink-0 overflow-hidden">
+                <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
+              </div>
+            )}
+            <span className="font-sans text-sm text-warm-primary line-clamp-2 flex-1 leading-tight">{slot.recipe.title}</span>
+          </Link>
           <button onClick={() => removeSlot({ id: slot.id, slot_date: date })}
             aria-label="Remove from plan"
             className="min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation">

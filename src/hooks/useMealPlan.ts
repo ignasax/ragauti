@@ -2,17 +2,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
 import type { MealPlanSlot, Recipe } from '../types/app'
 
-export function useMealPlan(weekStart: string) {
+export function useMealPlan(windowStart: string) {
   return useQuery({
-    queryKey: ['meal-plan', weekStart],
+    queryKey: ['meal-plan', windowStart],
     queryFn: async () => {
-      const weekEnd = new Date(weekStart)
-      weekEnd.setDate(weekEnd.getDate() + 6)
+      const windowEnd = new Date(windowStart)
+      windowEnd.setDate(windowEnd.getDate() + 6)
       const { data, error } = await supabase
         .from('meal_plan_slots')
         .select('*, recipe:recipes(id, title, image_url)')
-        .gte('slot_date', weekStart)
-        .lte('slot_date', weekEnd.toISOString().split('T')[0])
+        .gte('slot_date', windowStart)
+        .lte('slot_date', windowEnd.toISOString().split('T')[0])
         .order('slot_date')
       if (error) throw error
       return data as MealPlanSlot[]
@@ -20,7 +20,7 @@ export function useMealPlan(weekStart: string) {
   })
 }
 
-export function useAddMealSlot() {
+export function useAddMealSlot(windowStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ slot_date, meal_type, recipe_id }: { slot_date: string; meal_type: 'lunch' | 'dinner'; recipe_id: string }) => {
@@ -32,9 +32,8 @@ export function useAddMealSlot() {
       if (error) throw error
     },
     onMutate: async ({ slot_date, meal_type, recipe_id }) => {
-      const weekStart = getMondayOf(slot_date)
-      await qc.cancelQueries({ queryKey: ['meal-plan', weekStart] })
-      const previous = qc.getQueryData<MealPlanSlot[]>(['meal-plan', weekStart])
+      await qc.cancelQueries({ queryKey: ['meal-plan', windowStart] })
+      const previous = qc.getQueryData<MealPlanSlot[]>(['meal-plan', windowStart])
       const recipes = qc.getQueryData<Recipe[]>(['recipes']) ?? []
       const recipe = recipes.find(r => r.id === recipe_id)
       const tempSlot: MealPlanSlot = {
@@ -46,39 +45,38 @@ export function useAddMealSlot() {
         created_at: new Date().toISOString(),
         recipe: recipe ? { id: recipe.id, title: recipe.title, image_url: recipe.image_url } : undefined,
       }
-      qc.setQueryData<MealPlanSlot[]>(['meal-plan', weekStart], old => {
+      qc.setQueryData<MealPlanSlot[]>(['meal-plan', windowStart], old => {
         const filtered = (old ?? []).filter(s => !(s.slot_date === slot_date && s.meal_type === meal_type))
         return [...filtered, tempSlot]
       })
-      return { previous, weekStart }
+      return { previous }
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData(['meal-plan', ctx.weekStart], ctx.previous)
+      if (ctx?.previous) qc.setQueryData(['meal-plan', windowStart], ctx.previous)
     },
-    onSettled: (_d, _e, v) => qc.invalidateQueries({ queryKey: ['meal-plan', getMondayOf(v.slot_date)] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['meal-plan', windowStart] }),
   })
 }
 
-export function useRemoveMealSlot() {
+export function useRemoveMealSlot(windowStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async ({ id }: { id: string; slot_date: string }) => {
       const { error } = await supabase.from('meal_plan_slots').delete().eq('id', id)
       if (error) throw error
     },
-    onMutate: async ({ id, slot_date }) => {
-      const weekStart = getMondayOf(slot_date)
-      await qc.cancelQueries({ queryKey: ['meal-plan', weekStart] })
-      const previous = qc.getQueryData<MealPlanSlot[]>(['meal-plan', weekStart])
-      qc.setQueryData<MealPlanSlot[]>(['meal-plan', weekStart], old =>
+    onMutate: async ({ id }) => {
+      await qc.cancelQueries({ queryKey: ['meal-plan', windowStart] })
+      const previous = qc.getQueryData<MealPlanSlot[]>(['meal-plan', windowStart])
+      qc.setQueryData<MealPlanSlot[]>(['meal-plan', windowStart], old =>
         old?.filter(s => s.id !== id) ?? []
       )
-      return { previous, weekStart }
+      return { previous }
     },
     onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData(['meal-plan', ctx.weekStart], ctx.previous)
+      if (ctx?.previous) qc.setQueryData(['meal-plan', windowStart], ctx.previous)
     },
-    onSettled: (_d, _e, v) => qc.invalidateQueries({ queryKey: ['meal-plan', getMondayOf(v.slot_date)] }),
+    onSettled: () => qc.invalidateQueries({ queryKey: ['meal-plan', windowStart] }),
   })
 }
 
@@ -88,4 +86,11 @@ export function getMondayOf(dateStr: string): string {
   const diff = (day === 0 ? -6 : 1 - day)
   d.setDate(d.getDate() + diff)
   return d.toISOString().split('T')[0]
+}
+
+/** Returns the local date string (YYYY-MM-DD) for today + offset days. */
+export function getLocalDateStr(offsetDays = 0): string {
+  const d = new Date()
+  d.setDate(d.getDate() + offsetDays)
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 }

@@ -73,7 +73,7 @@ export function AddRecipePage() {
         topSlot={topSlot}
         submitLabel="Save Recipe"
         isSubmitting={isPending}
-        onSubmit={async (data) => { await mutateAsync(data); navigate('/recipes') }}
+        onSubmit={async (data) => { await mutateAsync(data); navigate('/recipes', { replace: true }) }}
       />
     </div>
   )

@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Star, X, Camera, ImagePlus } from 'lucide-react'
+import { supabase } from '../../lib/supabase'
+import { uploadRecipeImage } from '../../utils/uploadImage'
 import type { Recipe } from '../../types/app'
 
 type RecipeFormData = Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'>
@@ -24,9 +26,23 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
   const [data, setData] = useState<RecipeFormData>({ ...empty, ...initialData })
   const [categoryInput, setCategoryInput] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [imageFile, setImageFile] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url ?? null)
+  const [isUploading, setIsUploading] = useState(false)
 
   const set = <K extends keyof RecipeFormData>(key: K, value: RecipeFormData[K]) =>
     setData(d => ({ ...d, [key]: value }))
+
+  const handleImageFile = (file: File) => {
+    setImageFile(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const clearImage = () => {
+    setImageFile(null)
+    setImagePreview(null)
+    set('image_url', null)
+  }
 
   const addCategory = () => {
     const t = categoryInput.trim()
@@ -38,7 +54,25 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
     e.preventDefault()
     if (!data.title.trim()) { setError('Title is required'); return }
     setError(null)
-    await onSubmit(data)
+
+    let finalData = { ...data }
+
+    if (imageFile) {
+      setIsUploading(true)
+      try {
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+          finalData.image_url = await uploadRecipeImage(imageFile, user.id)
+        }
+      } catch {
+        setError('Image upload failed — please try again or skip the image.')
+        setIsUploading(false)
+        return
+      }
+      setIsUploading(false)
+    }
+
+    await onSubmit(finalData)
   }
 
   const inputCls = "w-full bg-warm-surface border border-warm-border rounded-lg px-3 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]"
@@ -50,26 +84,37 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         <label htmlFor="title" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Title *</label>
         <input id="title" value={data.title} onChange={e => set('title', e.target.value)} placeholder="Recipe name" className={inputCls} />
       </div>
+
       <div>
-        <label htmlFor="image" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Image</label>
-        <input id="image" value={data.image_url ?? ''} onChange={e => set('image_url', e.target.value || null)} placeholder="Image URL" className={inputCls} />
-        <div className="flex gap-2 mt-2">
-          <label htmlFor="image-camera"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-            <Camera className="w-4 h-4" aria-hidden="true" />
-            Camera
-          </label>
-          <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
-            onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
-          <label htmlFor="image-gallery"
-            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-            <ImagePlus className="w-4 h-4" aria-hidden="true" />
-            Choose file
-          </label>
-          <input id="image-gallery" type="file" accept="image/*" className="sr-only"
-            onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
-        </div>
+        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Image</span>
+        {imagePreview ? (
+          <div className="relative rounded-xl overflow-hidden">
+            <img src={imagePreview} alt="Recipe preview" className="w-full h-44 object-cover" />
+            <button type="button" onClick={clearImage} aria-label="Remove image"
+              className="absolute top-2 right-2 w-9 h-9 bg-warm-base/80 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
+              <X className="w-4 h-4 text-warm-primary" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex gap-2">
+            <label htmlFor="image-camera"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+              <Camera className="w-4 h-4" aria-hidden="true" />
+              Take Photo
+            </label>
+            <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
+            <label htmlFor="image-gallery"
+              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+              <ImagePlus className="w-4 h-4" aria-hidden="true" />
+              Choose File
+            </label>
+            <input id="image-gallery" type="file" accept="image/*" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
+          </div>
+        )}
       </div>
+
       <div className="flex gap-3">
         <div className="flex-1">
           <label htmlFor="prep" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Prep (min)</label>
@@ -90,6 +135,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
           </select>
         </div>
       </div>
+
       <div>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Rating</span>
         <div className="flex gap-2">
@@ -101,6 +147,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
           ))}
         </div>
       </div>
+
       <div>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Categories</span>
         <div className="flex flex-wrap gap-2 mb-2">
@@ -122,6 +169,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
             className="bg-warm-surface border border-warm-border text-warm-primary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation">Add</button>
         </div>
       </div>
+
       <div>
         <label htmlFor="ingredients" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Ingredients</label>
         <textarea id="ingredients" rows={6} value={data.ingredients} onChange={e => set('ingredients', e.target.value)}
@@ -137,15 +185,16 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         <textarea id="comments" rows={3} value={data.comments ?? ''} onChange={e => set('comments', e.target.value || null)}
           placeholder="Personal notes, tips..." className={`${inputCls} resize-none`} />
       </div>
+
       {error && <p className="font-sans text-sm text-red-600">{error}</p>}
       <div className="flex gap-3">
         <button type="button" onClick={() => navigate(-1)}
           className="flex-1 border border-warm-border text-warm-primary font-sans font-medium text-sm px-4 py-3 rounded-lg min-h-[44px] bg-warm-card active:bg-warm-surface transition-colors duration-150 cursor-pointer touch-manipulation">
           Cancel
         </button>
-        <button type="submit" disabled={isSubmitting}
+        <button type="submit" disabled={isSubmitting || isUploading}
           className="flex-1 bg-warm-accent text-white font-sans font-semibold text-sm px-4 py-3 rounded-xl min-h-[44px] active:opacity-80 disabled:opacity-50 transition-opacity duration-150 cursor-pointer touch-manipulation">
-          {isSubmitting ? 'Saving…' : submitLabel}
+          {isUploading ? 'Uploading…' : isSubmitting ? 'Saving…' : submitLabel}
         </button>
       </div>
     </form>
