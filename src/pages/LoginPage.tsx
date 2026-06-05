@@ -14,7 +14,10 @@ export function LoginPage() {
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: `${window.location.origin}/recipes` },
+      options: {
+        redirectTo: `${window.location.origin}/recipes`,
+        queryParams: { prompt: 'select_account' },
+      },
     })
   }
 

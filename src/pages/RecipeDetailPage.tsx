@@ -76,7 +76,7 @@ export function RecipeDetailPage() {
             >
               {images.map((url, i) => (
                 <div key={i} className="flex-shrink-0 w-full aspect-video bg-warm-surface snap-center">
-                  <img src={url} alt={recipe.title} className="w-full h-full object-cover" loading="lazy" />
+                  <img src={url} alt={recipe.title} className="w-full h-full object-cover" loading={i === 0 ? 'eager' : 'lazy'} />
                 </div>
               ))}
             </div>

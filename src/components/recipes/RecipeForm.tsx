@@ -43,7 +43,11 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
   const set = <K extends keyof RecipeFormData>(key: K, value: RecipeFormData[K]) =>
     setData(d => ({ ...d, [key]: value }))
 
+  const MAX_IMAGES = 3
+
   const handleImageFile = (file: File) => {
+    if (!file.type.startsWith('image/')) return
+    if (allPreviews.length >= MAX_IMAGES) return
     setNewFiles(f => [...f, file])
     setNewPreviews(p => [...p, URL.createObjectURL(file)])
   }
@@ -106,32 +110,38 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       </div>
 
       <div>
-        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Images</span>
+        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">
+          Images <span className="text-warm-muted normal-case font-normal">({allPreviews.length}/{MAX_IMAGES})</span>
+        </span>
         <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
-          <label htmlFor="image-camera"
-            className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-            <Camera className="w-4 h-4" aria-hidden="true" />
-            Take Photo
-          </label>
-          <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
-            onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
-          <label htmlFor="image-gallery"
-            className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-            <ImagePlus className="w-4 h-4" aria-hidden="true" />
-            Choose File
-          </label>
-          <input id="image-gallery" type="file" accept="image/*" multiple className="sr-only"
-            onChange={e => {
-              const files = Array.from(e.target.files ?? [])
-              files.forEach(f => handleImageFile(f))
-              e.target.value = ''
-            }} />
+          {allPreviews.length < MAX_IMAGES && (
+            <>
+              <label htmlFor="image-camera"
+                className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+                <Camera className="w-4 h-4" aria-hidden="true" />
+                Take Photo
+              </label>
+              <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
+                onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
+              <label htmlFor="image-gallery"
+                className="flex-shrink-0 flex items-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+                <ImagePlus className="w-4 h-4" aria-hidden="true" />
+                Choose File
+              </label>
+              <input id="image-gallery" type="file" accept="image/*" multiple className="sr-only"
+                onChange={e => {
+                  const files = Array.from(e.target.files ?? []).slice(0, MAX_IMAGES - allPreviews.length)
+                  files.forEach(f => handleImageFile(f))
+                  e.target.value = ''
+                }} />
+            </>
+          )}
           {allPreviews.map((src, i) => (
             <div key={i} className="relative flex-shrink-0 w-11 h-11 rounded-lg overflow-hidden self-center">
               <img src={src} alt="" className="w-full h-full object-cover" />
               <button type="button" onClick={() => removeImage(i)} aria-label="Remove image"
-                className="absolute inset-0 flex items-center justify-center bg-warm-base/60 opacity-0 hover:opacity-100 active:opacity-100 cursor-pointer touch-manipulation">
-                <X className="w-3 h-3 text-warm-primary" />
+                className="absolute top-0.5 right-0.5 w-5 h-5 bg-black/60 rounded-full flex items-center justify-center cursor-pointer touch-manipulation z-10">
+                <X className="w-3 h-3 text-white" />
               </button>
             </div>
           ))}
