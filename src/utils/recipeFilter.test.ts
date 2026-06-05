@@ -20,9 +20,10 @@ describe('filterRecipes', () => {
   it('filters by search term in ingredients', () => {
     expect(filterRecipes([base], { search: 'garlic' })).toHaveLength(1)
   })
-  it('filters by minimum rating', () => {
-    expect(filterRecipes([base], { minRating: 4 })).toHaveLength(1)
-    expect(filterRecipes([base], { minRating: 5 })).toHaveLength(0)
+  it('filters by exact rating', () => {
+    expect(filterRecipes([base], { rating: 4 })).toHaveLength(1)
+    expect(filterRecipes([base], { rating: 5 })).toHaveLength(0)
+    expect(filterRecipes([base], { rating: 3 })).toHaveLength(0)
   })
   it('filters by favourites only', () => {
     expect(filterRecipes([base], { favouritesOnly: true })).toHaveLength(0)
@@ -34,7 +35,7 @@ describe('filterRecipes', () => {
   })
   it('composes multiple filters', () => {
     const r2 = { ...base, id: '2', title: 'Soup', rating: 3, categories: ['French'] }
-    expect(filterRecipes([base, r2], { search: 'soup', minRating: 4 })).toHaveLength(0)
-    expect(filterRecipes([base, r2], { search: 'soup', minRating: 3 })).toHaveLength(1)
+    expect(filterRecipes([base, r2], { search: 'soup', rating: 4 })).toHaveLength(0)
+    expect(filterRecipes([base, r2], { search: 'soup', rating: 3 })).toHaveLength(1)
   })
 })
