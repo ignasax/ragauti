@@ -6,13 +6,14 @@ export function useMealPlan(windowStart: string) {
   return useQuery({
     queryKey: ['meal-plan', windowStart],
     queryFn: async () => {
-      const windowEnd = new Date(windowStart)
-      windowEnd.setDate(windowEnd.getDate() + 6)
+      const [y, m, d] = windowStart.split('-').map(Number)
+      const windowEnd = new Date(y, m - 1, d + 6)
+      const windowEndStr = `${windowEnd.getFullYear()}-${String(windowEnd.getMonth() + 1).padStart(2, '0')}-${String(windowEnd.getDate()).padStart(2, '0')}`
       const { data, error } = await supabase
         .from('meal_plan_slots')
         .select('*, recipe:recipes(id, title, image_url)')
         .gte('slot_date', windowStart)
-        .lte('slot_date', windowEnd.toISOString().split('T')[0])
+        .lte('slot_date', windowEndStr)
         .order('slot_date')
       if (error) throw error
       return data as MealPlanSlot[]

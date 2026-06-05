@@ -10,9 +10,9 @@ export function WeekGrid({ windowStart }: WeekGridProps) {
   const today = getLocalDateStr(0)
   const yesterday = getLocalDateStr(-1)
 
+  const [startY, startM, startD] = windowStart.split('-').map(Number)
   const days = Array.from({ length: 7 }, (_, i) => {
-    const d = new Date(windowStart)
-    d.setDate(d.getDate() + i)
+    const d = new Date(startY, startM - 1, startD + i)
     const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
     let label: string
     if (date === today) label = 'Today'

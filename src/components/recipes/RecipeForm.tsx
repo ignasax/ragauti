@@ -16,32 +16,46 @@ interface RecipeFormProps {
 }
 
 const empty: RecipeFormData = {
-  title: '', ingredients: '', instructions: '', image_url: null,
-  cook_time_mins: null, prep_time_mins: null, servings: null,
+  title: '', ingredients: '', instructions: '', image_url: null, image_urls: [],
+  cook_time_mins: null, prep_time_mins: null, servings: 1,
   rating: null, categories: [], comments: null, is_favourite: false, source_url: null,
 }
 
 export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, topSlot }: RecipeFormProps) {
   const navigate = useNavigate()
-  const [data, setData] = useState<RecipeFormData>({ ...empty, ...initialData })
+  const [data, setData] = useState<RecipeFormData>({ ...empty, ...initialData, servings: initialData?.servings ?? 1 })
   const [categoryInput, setCategoryInput] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [imageFile, setImageFile] = useState<File | null>(null)
-  const [imagePreview, setImagePreview] = useState<string | null>(initialData?.image_url ?? null)
   const [isUploading, setIsUploading] = useState(false)
+
+  // Existing images (already uploaded URLs)
+  const [existingUrls, setExistingUrls] = useState<string[]>(() => {
+    if (initialData?.image_urls?.length) return initialData.image_urls
+    if (initialData?.image_url) return [initialData.image_url]
+    return []
+  })
+  // New files to upload
+  const [newFiles, setNewFiles] = useState<File[]>([])
+  const [newPreviews, setNewPreviews] = useState<string[]>([])
+
+  const allPreviews = [...existingUrls, ...newPreviews]
 
   const set = <K extends keyof RecipeFormData>(key: K, value: RecipeFormData[K]) =>
     setData(d => ({ ...d, [key]: value }))
 
   const handleImageFile = (file: File) => {
-    setImageFile(file)
-    setImagePreview(URL.createObjectURL(file))
+    setNewFiles(f => [...f, file])
+    setNewPreviews(p => [...p, URL.createObjectURL(file)])
   }
 
-  const clearImage = () => {
-    setImageFile(null)
-    setImagePreview(null)
-    set('image_url', null)
+  const removeImage = (index: number) => {
+    if (index < existingUrls.length) {
+      setExistingUrls(u => u.filter((_, i) => i !== index))
+    } else {
+      const ni = index - existingUrls.length
+      setNewFiles(f => f.filter((_, i) => i !== ni))
+      setNewPreviews(p => p.filter((_, i) => i !== ni))
+    }
   }
 
   const addCategory = () => {
@@ -57,12 +71,15 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
 
     let finalData = { ...data }
 
-    if (imageFile) {
+    if (newFiles.length > 0) {
       setIsUploading(true)
       try {
         const { data: { user } } = await supabase.auth.getUser()
         if (user) {
-          finalData.image_url = await uploadRecipeImage(imageFile, user.id)
+          const uploadedUrls = await Promise.all(newFiles.map(f => uploadRecipeImage(f, user.id)))
+          const allUrls = [...existingUrls, ...uploadedUrls]
+          finalData.image_urls = allUrls
+          finalData.image_url = allUrls[0] ?? null
         }
       } catch {
         setError('Image upload failed — please try again or skip the image.')
@@ -70,6 +87,9 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         return
       }
       setIsUploading(false)
+    } else {
+      finalData.image_urls = existingUrls
+      finalData.image_url = existingUrls[0] ?? null
     }
 
     await onSubmit(finalData)
@@ -86,33 +106,40 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       </div>
 
       <div>
-        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Image</span>
-        {imagePreview ? (
-          <div className="relative rounded-xl overflow-hidden">
-            <img src={imagePreview} alt="Recipe preview" className="w-full h-44 object-cover" />
-            <button type="button" onClick={clearImage} aria-label="Remove image"
-              className="absolute top-2 right-2 w-9 h-9 bg-warm-base/80 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
-              <X className="w-4 h-4 text-warm-primary" />
-            </button>
-          </div>
-        ) : (
-          <div className="flex gap-2">
-            <label htmlFor="image-camera"
-              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-              <Camera className="w-4 h-4" aria-hidden="true" />
-              Take Photo
-            </label>
-            <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
-            <label htmlFor="image-gallery"
-              className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
-              <ImagePlus className="w-4 h-4" aria-hidden="true" />
-              Choose File
-            </label>
-            <input id="image-gallery" type="file" accept="image/*" className="sr-only"
-              onChange={e => { const f = e.target.files?.[0]; if (f) handleImageFile(f) }} />
+        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Images</span>
+        {allPreviews.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto pb-2 mb-2" style={{ scrollbarWidth: 'none' }}>
+            {allPreviews.map((src, i) => (
+              <div key={i} className="relative flex-shrink-0 w-24 h-24 rounded-xl overflow-hidden">
+                <img src={src} alt="" className="w-full h-full object-cover" />
+                <button type="button" onClick={() => removeImage(i)} aria-label="Remove image"
+                  className="absolute top-1 right-1 w-6 h-6 bg-warm-base/80 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
+                  <X className="w-3 h-3 text-warm-primary" />
+                </button>
+              </div>
+            ))}
           </div>
         )}
+        <div className="flex gap-2">
+          <label htmlFor="image-camera"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            <Camera className="w-4 h-4" aria-hidden="true" />
+            Take Photo
+          </label>
+          <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
+            onChange={e => { const f = e.target.files?.[0]; if (f) { handleImageFile(f); e.target.value = '' } }} />
+          <label htmlFor="image-gallery"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            <ImagePlus className="w-4 h-4" aria-hidden="true" />
+            Choose File
+          </label>
+          <input id="image-gallery" type="file" accept="image/*" multiple className="sr-only"
+            onChange={e => {
+              const files = Array.from(e.target.files ?? [])
+              files.forEach(f => handleImageFile(f))
+              e.target.value = ''
+            }} />
+        </div>
       </div>
 
       <div className="flex gap-3">
@@ -126,8 +153,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         </div>
         <div className="flex-1">
           <label htmlFor="servings" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Servings</label>
-          <select id="servings" value={data.servings ?? ''} onChange={e => set('servings', e.target.value ? parseInt(e.target.value) : null)} className={inputCls}>
-            <option value="">—</option>
+          <select id="servings" value={data.servings ?? 1} onChange={e => set('servings', parseInt(e.target.value))} className={inputCls}>
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
@@ -139,7 +165,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       <div>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Rating</span>
         <div className="flex gap-2">
-          {[1,2,3,4,5].map(n => (
+          {[3,4,5].map(n => (
             <button key={n} type="button" onClick={() => set('rating', data.rating === n ? null : n)}
               className="min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer touch-manipulation" aria-label={`${n} star`}>
               <Star className={`w-6 h-6 ${(data.rating ?? 0) >= n ? 'text-warm-accent fill-warm-accent' : 'text-warm-muted'}`} />

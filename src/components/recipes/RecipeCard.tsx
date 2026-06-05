@@ -20,8 +20,8 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
     <article className="bg-warm-card border border-warm-border rounded-xl overflow-hidden relative">
       <Link to={`/recipes/${recipe.id}`} className="block active:opacity-90 transition-opacity duration-150">
         <div className="aspect-square bg-warm-surface">
-          {recipe.image_url
-            ? <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" loading="lazy" />
+          {(recipe.image_urls?.[0] ?? recipe.image_url)
+            ? <img src={recipe.image_urls?.[0] ?? recipe.image_url!} alt={recipe.title} className="w-full h-full object-cover" loading="lazy" />
             : <div aria-hidden="true" className="w-full h-full flex items-center justify-center"><Utensils className="w-10 h-10 text-warm-muted" /></div>
           }
         </div>

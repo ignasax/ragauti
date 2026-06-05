@@ -8,19 +8,20 @@ function getDefaultWindowStart(): string {
 }
 
 function formatWindowLabel(start: string): string {
-  const end = new Date(start)
-  end.setDate(end.getDate() + 6)
+  const [sy, sm, sd] = start.split('-').map(Number)
+  const startDate = new Date(sy, sm - 1, sd)
+  const endDate = new Date(sy, sm - 1, sd + 6)
   const fmt = (d: Date) => d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })
-  return `${fmt(new Date(start))} – ${fmt(end)}`
+  return `${fmt(startDate)} – ${fmt(endDate)}`
 }
 
 export function PlannerPage() {
   const [windowStart, setWindowStart] = useState(getDefaultWindowStart)
 
   const shift = (days: number) => {
-    const d = new Date(windowStart)
-    d.setDate(d.getDate() + days)
-    setWindowStart(`${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`)
+    const [y, m, d] = windowStart.split('-').map(Number)
+    const date = new Date(y, m - 1, d + days)
+    setWindowStart(`${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`)
   }
 
   const isOnDefault = windowStart === getDefaultWindowStart()

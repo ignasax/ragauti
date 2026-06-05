@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { Plus, X, RefreshCcw, Trash2 } from 'lucide-react'
 import { useGroceryList, useGenerateGroceryList, useAddGroceryItem, useDeleteAllGroceryItems } from '../hooks/useGroceryList'
 import { getMondayOf } from '../hooks/useMealPlan'
 import { GroceryGroup } from '../components/grocery/GroceryGroup'
@@ -26,7 +26,7 @@ export function GroceryPage() {
     }
   }, [confirmRegen, confirmClear])
 
-  // Focus input when FAB expands
+  // Focus input when FAB expands; clear text when it closes
   useEffect(() => {
     if (fabExpanded) {
       setTimeout(() => fabInputRef.current?.focus(), 150)
@@ -69,10 +69,9 @@ export function GroceryPage() {
       if (text) {
         addItem(text)
         setAddText('')
-        setFabExpanded(false)
-      } else {
-        setFabExpanded(false)
+        setTimeout(() => fabInputRef.current?.focus(), 0)
       }
+      // Stay open — X button closes
     }
   }
 
@@ -86,19 +85,21 @@ export function GroceryPage() {
       <div className="flex items-center justify-between gap-2">
         <h1 className="font-serif text-2xl font-bold text-warm-primary">Grocery</h1>
         <div className="flex items-center gap-2">
-          {items.length > 0 && (
-            <button
-              onClick={() => setConfirmClear(true)}
-              className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] active:opacity-80 cursor-pointer touch-manipulation whitespace-nowrap opacity-70">
-              Clear all
-            </button>
-          )}
           <button
             onClick={() => items.length > 0 ? setConfirmRegen(true) : handleGenerate()}
             disabled={isGenerating}
-            className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation whitespace-nowrap">
-            {isGenerating ? 'Generating…' : 'Generate weekly list'}
+            aria-label={isGenerating ? 'Generating…' : 'Generate weekly list'}
+            className="bg-warm-accent text-white min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
+            <RefreshCcw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
+          {items.length > 0 && (
+            <button
+              onClick={() => setConfirmClear(true)}
+              aria-label="Clear all"
+              className="bg-warm-surface border border-warm-border text-warm-secondary min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </button>
+          )}
         </div>
       </div>
 
@@ -134,15 +135,25 @@ export function GroceryPage() {
           }}
         >
           {fabExpanded && (
-            <input
-              ref={fabInputRef}
-              value={addText}
-              onChange={e => setAddText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') handleFabClick() }}
-              placeholder="Add item…"
-              aria-label="New grocery item"
-              className="flex-1 bg-transparent text-white placeholder:text-white/60 font-sans text-base pl-4 focus:outline-none min-w-0"
-            />
+            <>
+              <button
+                type="button"
+                onClick={() => setFabExpanded(false)}
+                aria-label="Close"
+                className="w-12 h-14 flex-shrink-0 flex items-center justify-center text-white/80 active:opacity-60 touch-manipulation cursor-pointer"
+              >
+                <X className="w-5 h-5" aria-hidden="true" />
+              </button>
+              <input
+                ref={fabInputRef}
+                value={addText}
+                onChange={e => setAddText(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleFabClick() }}
+                placeholder="Add item…"
+                aria-label="New grocery item"
+                className="flex-1 bg-transparent text-white placeholder:text-white/60 font-sans text-base focus:outline-none min-w-0"
+              />
+            </>
           )}
           <button
             type="button"
