@@ -54,10 +54,13 @@ export function LoginPage() {
         {/* Install tip */}
         <div className="w-full bg-warm-surface border border-warm-border rounded-xl px-4 py-3 flex items-start gap-3">
           <Share className="w-4 h-4 text-warm-accent mt-0.5 shrink-0" aria-hidden="true" />
-          <div className="flex flex-col gap-0.5">
+          <div className="flex flex-col gap-1.5">
             <p className="font-sans font-semibold text-warm-primary text-sm">Install as an app</p>
             <p className="font-sans text-warm-secondary text-xs leading-relaxed">
-              Open <span className="font-medium">ragauti.vercel.app</span> in Chrome or Safari, tap <span className="font-medium">Share → Add to Home Screen</span>. Full screen, no browser bar, real app icon.
+              Open <span className="font-medium text-warm-primary">ragauti.vercel.app</span> in Chrome or Safari, tap <span className="font-medium text-warm-primary">Share → Add to Home Screen</span>. Full screen, no browser bar, real app icon.
+            </p>
+            <p className="font-sans text-warm-muted text-xs leading-relaxed border-t border-warm-border pt-1.5">
+              On Android, one-tap sharing from any app works out of the box. On iPhone, Apple restricts this at the OS level — for now: copy the URL, open Ragauti, paste. Apple is slowly opening this up.
             </p>
           </div>
         </div>
