@@ -1,0 +1,46 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - heading "Grocery" [level=1] [ref=e257]
+        - button "Generate list" [ref=e258] [cursor=pointer]
+      - generic [ref=e266]:
+        - heading "Spaghetti Carbonara" [level=3] [ref=e267]
+        - generic [ref=e268]:
+          - button "200g spaghetti" [pressed] [ref=e270] [cursor=pointer]:
+            - img [ref=e298]
+            - generic [ref=e272]: 200g spaghetti
+          - button "100g pancetta" [ref=e275] [cursor=pointer]:
+            - generic [ref=e277]: 100g pancetta
+          - button "2 large eggs" [ref=e280] [cursor=pointer]:
+            - generic [ref=e282]: 2 large eggs
+          - button "50g Pecorino Romano" [ref=e285] [cursor=pointer]:
+            - generic [ref=e287]: 50g Pecorino Romano
+          - button "2 cloves garlic" [ref=e290] [cursor=pointer]:
+            - generic [ref=e292]: 2 cloves garlic
+          - button "Black pepper to taste" [ref=e295] [cursor=pointer]:
+            - generic [ref=e297]: Black pepper to taste
+      - generic [ref=e262]:
+        - textbox "New grocery item" [ref=e263]:
+          - /placeholder: Add item manually…
+        - button "Add" [disabled] [ref=e264] [cursor=pointer]
+  - button "+ Add item" [ref=e265] [cursor=pointer]:
+    - img [ref=e226]
+    - generic [ref=e227]: + Add item
+  - navigation [ref=e74]:
+    - link "Recipes" [ref=e75] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e76]
+      - generic [ref=e78]: Recipes
+    - link "Planner" [ref=e79] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e80]
+      - generic [ref=e82]: Planner
+    - link "Grocery" [ref=e83] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e84]
+      - generic [ref=e88]: Grocery
+    - link "Settings" [ref=e89] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e90]
+      - generic [ref=e93]: Settings

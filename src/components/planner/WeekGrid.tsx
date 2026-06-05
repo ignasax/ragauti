@@ -19,14 +19,14 @@ export function WeekGrid({ weekStart }: WeekGridProps) {
 
   return (
     <div className="flex flex-col gap-1">
-      <div className="grid grid-cols-[100px_1fr_1fr] gap-2 px-1 pb-1">
+      <div className="grid grid-cols-[68px_1fr_1fr] gap-2 px-1 pb-1">
         <div />
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider text-center">Lunch</span>
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider text-center">Dinner</span>
       </div>
       {days.map(({ display, date }) => (
-        <div key={date} className="grid grid-cols-[100px_1fr_1fr] gap-2 items-start">
-          <div className="min-h-[52px] flex items-center">
+        <div key={date} className="grid grid-cols-[68px_1fr_1fr] gap-2 items-start">
+          <div className="min-h-[80px] flex items-center">
             <span className="font-sans text-sm font-semibold text-warm-primary">{display}</span>
           </div>
           <MealSlot date={date} mealType="lunch" slot={getSlot(date, 'lunch')} />

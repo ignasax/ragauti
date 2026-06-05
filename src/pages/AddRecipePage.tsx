@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { ChevronLeft, Sparkles } from 'lucide-react'
 import { RecipeForm } from '../components/recipes/RecipeForm'
-import { ClipboardBanner } from '../components/recipes/ClipboardBanner'
 import { GeminiKeyBanner } from '../components/auth/GeminiKeyBanner'
 import { useAddRecipe } from '../hooks/useRecipes'
 import { useGeminiExtract } from '../hooks/useGeminiExtract'
@@ -15,18 +14,10 @@ export function AddRecipePage() {
   const { geminiKey } = useGeminiKey()
   const { extract, isExtracting, extracted, error, hasPartialData } = useGeminiExtract(geminiKey)
   const [urlInput, setUrlInput] = useState('')
-  const [clipboardUrl, setClipboardUrl] = useState<string | null>(null)
   const [formKey, setFormKey] = useState(0)
 
   // Read shared URL from ShareTargetPage redirect
   const sharedUrl = (location.state as { sharedUrl?: string } | null)?.sharedUrl
-
-  // On mount: check clipboard for a URL
-  useEffect(() => {
-    navigator.clipboard?.readText().then(text => {
-      if (/^https?:\/\//.test(text.trim())) setClipboardUrl(text.trim())
-    }).catch(() => {})
-  }, [])
 
   // Auto-extract when arriving via share target
   useEffect(() => {
@@ -43,15 +34,11 @@ export function AddRecipePage() {
   }, [extracted])
 
   const handleExtract = async (url: string) => {
-    setClipboardUrl(null)
     await extract(url)
   }
 
   const topSlot = (
     <div className="flex flex-col gap-3">
-      {clipboardUrl && (
-        <ClipboardBanner url={clipboardUrl} onExtract={handleExtract} onDismiss={() => setClipboardUrl(null)} />
-      )}
       <div className="flex gap-2">
         <input value={urlInput} onChange={e => setUrlInput(e.target.value)} placeholder="Paste recipe URL…"
           aria-label="Recipe URL"

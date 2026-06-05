@@ -21,7 +21,6 @@ export function useGenerateGroceryList(weekStart: string) {
   const qc = useQueryClient()
   return useMutation({
     mutationFn: async () => {
-      // 1. Fetch meal plan slots FIRST (before any destructive operations)
       const weekEnd = new Date(weekStart)
       weekEnd.setDate(weekEnd.getDate() + 6)
       const { data: slots, error } = await supabase
@@ -31,7 +30,6 @@ export function useGenerateGroceryList(weekStart: string) {
         .lte('slot_date', weekEnd.toISOString().split('T')[0])
       if (error) throw error
 
-      // 2. Build items in memory
       const items: Omit<GroceryItem, 'id' | 'user_id' | 'created_at' | 'recipe'>[] = []
       let order = 0
       for (const slot of (slots as (MealPlanSlot & { recipe: { id: string; title: string; ingredients: string } })[]) ?? []) {
@@ -48,10 +46,8 @@ export function useGenerateGroceryList(weekStart: string) {
         }
       }
 
-      // 3. Only now delete the old list (we have the new one ready)
       await supabase.from('grocery_items').delete().eq('week_start', weekStart)
 
-      // 4. Insert new items
       if (items.length) {
         const { data: { user } } = await supabase.auth.getUser()
         if (!user) throw new Error('Not authenticated')
@@ -71,7 +67,82 @@ export function useToggleGroceryItem() {
       if (error) throw error
       return { week_start }
     },
-    onSuccess: (data) => qc.invalidateQueries({ queryKey: ['grocery', data.week_start] }),
+    onMutate: async ({ id, is_checked, week_start }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', week_start] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', week_start])
+      qc.setQueryData<GroceryItem[]>(['grocery', week_start], old =>
+        old?.map(item => item.id === id ? { ...item, is_checked } : item) ?? []
+      )
+      return { previous, week_start }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', ctx.week_start], ctx.previous)
+    },
+    onSettled: (_data, _err, vars) => qc.invalidateQueries({ queryKey: ['grocery', vars.week_start] }),
+  })
+}
+
+export function useToggleAllGroceryItems(weekStart: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids, is_checked }: { ids: string[]; is_checked: boolean }) => {
+      const { error } = await supabase.from('grocery_items').update({ is_checked }).in('id', ids)
+      if (error) throw error
+    },
+    onMutate: async ({ ids, is_checked }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', weekStart] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', weekStart])
+      qc.setQueryData<GroceryItem[]>(['grocery', weekStart], old =>
+        old?.map(item => ids.includes(item.id) ? { ...item, is_checked } : item) ?? []
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', weekStart], ctx.previous)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
+  })
+}
+
+export function useDeleteGroceryGroup(weekStart: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async ({ ids }: { ids: string[] }) => {
+      const { error } = await supabase.from('grocery_items').delete().in('id', ids)
+      if (error) throw error
+    },
+    onMutate: async ({ ids }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', weekStart] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', weekStart])
+      qc.setQueryData<GroceryItem[]>(['grocery', weekStart], old =>
+        old?.filter(item => !ids.includes(item.id)) ?? []
+      )
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', weekStart], ctx.previous)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
+  })
+}
+
+export function useDeleteAllGroceryItems(weekStart: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: async () => {
+      const { error } = await supabase.from('grocery_items').delete().eq('week_start', weekStart)
+      if (error) throw error
+    },
+    onMutate: async () => {
+      await qc.cancelQueries({ queryKey: ['grocery', weekStart] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', weekStart])
+      qc.setQueryData(['grocery', weekStart], [])
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', weekStart], ctx.previous)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
   })
 }
 
@@ -81,10 +152,12 @@ export function useAddGroceryItem(weekStart: string) {
     mutationFn: async (text: string) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
-      const { error } = await supabase.from('grocery_items').insert({
-        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Math.floor(Date.now() / 1000), user_id: user.id,
-      })
+      const { data, error } = await supabase.from('grocery_items').insert({
+        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false,
+        sort_order: Math.floor(Date.now() / 1000), user_id: user.id,
+      }).select().single()
       if (error) throw error
+      return data as GroceryItem
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
   })

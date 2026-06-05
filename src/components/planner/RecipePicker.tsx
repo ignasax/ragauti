@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react'
-import { X, Search } from 'lucide-react'
+import { X, Search, Utensils } from 'lucide-react'
 import { useRecipes } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
 
@@ -24,7 +24,9 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
   }, [onClose])
 
   const filtered = useMemo(
-    () => recipes.filter(r => r.title.toLowerCase().includes(search.toLowerCase())),
+    () => [...recipes]
+      .sort((a, b) => a.title.localeCompare(b.title))
+      .filter(r => r.title.toLowerCase().includes(search.toLowerCase())),
     [recipes, search]
   )
 
@@ -54,7 +56,6 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
               onChange={e => setSearch(e.target.value)}
               placeholder="Search…"
               aria-label="Search recipes"
-              autoFocus
               className="w-full bg-warm-surface border border-warm-border rounded-xl pl-9 pr-4 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]"
             />
           </div>
@@ -66,7 +67,7 @@ export function RecipePicker({ onSelect, onClose }: RecipePickerProps) {
               <div className="w-10 h-10 rounded-lg bg-warm-surface overflow-hidden flex-shrink-0">
                 {r.image_url
                   ? <img src={r.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                  : <div aria-hidden="true" className="w-full h-full flex items-center justify-center text-lg">🍽</div>
+                  : <div aria-hidden="true" className="w-full h-full flex items-center justify-center"><Utensils className="w-5 h-5 text-warm-muted" /></div>
                 }
               </div>
               <span className="font-sans text-sm text-warm-primary line-clamp-2">{r.title}</span>

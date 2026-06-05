@@ -23,7 +23,7 @@ export function MealSlot({ date, mealType, slot }: MealSlotProps) {
   if (slot?.recipe) {
     return (
       <>
-        <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[52px] flex items-center px-2 gap-2">
+        <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px] flex items-center px-2 gap-2">
           {slot.recipe.image_url && (
             <div className="w-8 h-8 rounded flex-shrink-0 overflow-hidden">
               <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
@@ -44,7 +44,7 @@ export function MealSlot({ date, mealType, slot }: MealSlotProps) {
   return (
     <>
       <button onClick={() => setPicking(true)}
-        className="w-full min-h-[52px] border-2 border-dashed border-warm-border rounded-lg flex items-center justify-center cursor-pointer touch-manipulation active:bg-warm-surface transition-colors"
+        className="w-full min-h-[80px] border-2 border-dashed border-warm-border rounded-lg flex items-center justify-center cursor-pointer touch-manipulation active:bg-warm-surface transition-colors"
         aria-label={`Add ${mealType} for ${date}`}>
         <Plus className="w-4 h-4 text-warm-muted" />
       </button>

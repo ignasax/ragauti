@@ -1,0 +1,89 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e160]:
+      - generic [ref=e161]:
+        - heading "Planner" [level=1] [ref=e162]
+        - generic [ref=e163]:
+          - button "Previous week" [ref=e164] [cursor=pointer]:
+            - img [ref=e165]
+          - generic [ref=e167]: 1 Jun – 7 Jun
+          - button "Next week" [ref=e168] [cursor=pointer]:
+            - img [ref=e169]
+      - generic [ref=e171]:
+        - generic [ref=e172]:
+          - generic [ref=e174]: Lunch
+          - generic [ref=e175]: Dinner
+        - generic [ref=e176]:
+          - generic [ref=e178]: Mon 1
+          - button "Add lunch for 2026-06-01" [ref=e179] [cursor=pointer]:
+            - img [ref=e180]
+          - button "Add dinner for 2026-06-01" [ref=e181] [cursor=pointer]:
+            - img [ref=e182]
+        - generic [ref=e183]:
+          - generic [ref=e185]: Tue 2
+          - button "Add lunch for 2026-06-02" [ref=e186] [cursor=pointer]:
+            - img [ref=e187]
+          - button "Add dinner for 2026-06-02" [ref=e188] [cursor=pointer]:
+            - img [ref=e189]
+        - generic [ref=e190]:
+          - generic [ref=e192]: Wed 3
+          - button "Add lunch for 2026-06-03" [ref=e193] [cursor=pointer]:
+            - img [ref=e194]
+          - button "Add dinner for 2026-06-03" [ref=e195] [cursor=pointer]:
+            - img [ref=e196]
+        - generic [ref=e197]:
+          - generic [ref=e199]: Thu 4
+          - button "Add lunch for 2026-06-04" [ref=e200] [cursor=pointer]:
+            - img [ref=e201]
+          - dialog "Choose Recipe" [ref=e230]:
+            - generic [ref=e232]:
+              - heading "Choose Recipe" [level=2] [ref=e233]
+              - button "Close" [ref=e234] [cursor=pointer]:
+                - img [ref=e235]
+            - generic [ref=e239]:
+              - img [ref=e240]
+              - textbox "Search recipes" [active] [ref=e243]:
+                - /placeholder: Search…
+            - button "Spaghetti Carbonara" [ref=e245] [cursor=pointer]:
+              - generic [ref=e247]: 🍽
+              - generic [ref=e248]: Spaghetti Carbonara
+          - button "Add dinner for 2026-06-04" [ref=e202] [cursor=pointer]:
+            - img [ref=e203]
+        - generic [ref=e204]:
+          - generic [ref=e206]: Fri 5
+          - button "Add lunch for 2026-06-05" [ref=e207] [cursor=pointer]:
+            - img [ref=e208]
+          - button "Add dinner for 2026-06-05" [ref=e209] [cursor=pointer]:
+            - img [ref=e210]
+        - generic [ref=e211]:
+          - generic [ref=e213]: Sat 6
+          - button "Add lunch for 2026-06-06" [ref=e214] [cursor=pointer]:
+            - img [ref=e215]
+          - button "Add dinner for 2026-06-06" [ref=e216] [cursor=pointer]:
+            - img [ref=e217]
+        - generic [ref=e218]:
+          - generic [ref=e220]: Sun 7
+          - button "Add lunch for 2026-06-07" [ref=e221] [cursor=pointer]:
+            - img [ref=e222]
+          - button "Add dinner for 2026-06-07" [ref=e223] [cursor=pointer]:
+            - img [ref=e224]
+  - button "+ Add to plan" [ref=e225] [cursor=pointer]:
+    - img [ref=e226]
+    - generic [ref=e227]: + Add to plan
+  - navigation [ref=e74]:
+    - link "Recipes" [ref=e75] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e76]
+      - generic [ref=e78]: Recipes
+    - link "Planner" [ref=e79] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e80]
+      - generic [ref=e82]: Planner
+    - link "Grocery" [ref=e83] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e84]
+      - generic [ref=e88]: Grocery
+    - link "Settings" [ref=e89] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e90]
+      - generic [ref=e93]: Settings

@@ -1,0 +1,30 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "Grocery" [level=1] [ref=e7]
+        - button "Generate list" [ref=e8] [cursor=pointer]
+      - generic [ref=e13]:
+        - textbox "New grocery item" [ref=e14]:
+          - /placeholder: Add item manually…
+        - button "Add" [disabled] [ref=e15] [cursor=pointer]
+  - button "Add item" [ref=e16] [cursor=pointer]:
+    - img [ref=e17]
+    - generic [ref=e18]: Add item
+  - navigation [ref=e19]:
+    - link "Recipes" [ref=e20] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e21]
+      - generic [ref=e23]: Recipes
+    - link "Planner" [ref=e24] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e25]
+      - generic [ref=e27]: Planner
+    - link "Grocery" [ref=e28] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e29]
+      - generic [ref=e33]: Grocery
+    - link "Settings" [ref=e34] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e35]
+      - generic [ref=e38]: Settings

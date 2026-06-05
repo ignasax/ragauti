@@ -1,0 +1,36 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e153]:
+      - heading "Settings" [level=1] [ref=e154]
+      - generic [ref=e155]:
+        - img "Profile photo" [ref=e156]
+        - generic [ref=e157]:
+          - paragraph [ref=e158]: Ignas Stockus
+          - paragraph [ref=e159]: Google account
+      - generic [ref=e160]:
+        - heading "AI Features" [level=2] [ref=e161]
+        - generic [ref=e162]:
+          - generic [ref=e163]:
+            - generic [ref=e164]: Gemini API Key
+            - textbox "Gemini API Key" [ref=e165]:
+              - /placeholder: AIza…
+            - paragraph [ref=e166]: Used client-side only — never sent to our servers.
+          - button "Save Key" [disabled] [ref=e167] [cursor=pointer]
+      - button "Sign out" [ref=e168] [cursor=pointer]
+  - navigation [ref=e53]:
+    - link "Recipes" [ref=e54] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e55]
+      - generic [ref=e57]: Recipes
+    - link "Planner" [ref=e58] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e59]
+      - generic [ref=e61]: Planner
+    - link "Grocery" [ref=e62] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e63]
+      - generic [ref=e67]: Grocery
+    - link "Settings" [active] [ref=e68] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e69]
+      - generic [ref=e72]: Settings

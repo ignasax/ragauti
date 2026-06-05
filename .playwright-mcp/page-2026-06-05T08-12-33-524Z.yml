@@ -1,0 +1,31 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - heading "Recipes" [level=1] [ref=e6]
+      - generic [ref=e7]:
+        - img [ref=e8]
+        - textbox "Search recipes…" [ref=e11]
+      - generic [ref=e12]:
+        - button "★+" [ref=e13] [cursor=pointer]
+        - button "★★+" [ref=e14] [cursor=pointer]
+        - button "★★★+" [ref=e15] [cursor=pointer]
+        - button "★★★★+" [ref=e16] [cursor=pointer]
+        - button "★★★★★+" [ref=e17] [cursor=pointer]
+        - button "♥ Favourites" [ref=e18] [cursor=pointer]
+  - navigation [ref=e50]:
+    - link "Recipes" [ref=e51] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e52]
+      - generic [ref=e54]: Recipes
+    - link "Planner" [ref=e55] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e56]
+      - generic [ref=e58]: Planner
+    - link "Grocery" [ref=e59] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e60]
+      - generic [ref=e64]: Grocery
+    - link "Settings" [ref=e65] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e66]
+      - generic [ref=e69]: Settings

@@ -1,0 +1,77 @@
+- generic [ref=e3]:
+  - main [ref=e4]:
+    - generic [ref=e5]:
+      - generic [ref=e6]:
+        - heading "Planner" [level=1] [ref=e7]
+        - generic [ref=e8]:
+          - button "Previous week" [ref=e9] [cursor=pointer]:
+            - img [ref=e10]
+          - generic [ref=e12]: 1 Jun – 7 Jun
+          - button "Next week" [ref=e13] [cursor=pointer]:
+            - img [ref=e14]
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e19]: Lunch
+          - generic [ref=e20]: Dinner
+        - generic [ref=e21]:
+          - generic [ref=e23]: Mon 1
+          - button "Add lunch for 2026-06-01" [ref=e24] [cursor=pointer]:
+            - img [ref=e25]
+          - button "Add dinner for 2026-06-01" [ref=e26] [cursor=pointer]:
+            - img [ref=e27]
+        - generic [ref=e28]:
+          - generic [ref=e30]: Tue 2
+          - button "Add lunch for 2026-06-02" [ref=e31] [cursor=pointer]:
+            - img [ref=e32]
+          - button "Add dinner for 2026-06-02" [ref=e33] [cursor=pointer]:
+            - img [ref=e34]
+        - generic [ref=e35]:
+          - generic [ref=e37]: Wed 3
+          - button "Add lunch for 2026-06-03" [ref=e38] [cursor=pointer]:
+            - img [ref=e39]
+          - button "Add dinner for 2026-06-03" [ref=e40] [cursor=pointer]:
+            - img [ref=e41]
+        - generic [ref=e42]:
+          - generic [ref=e44]: Thu 4
+          - button "Add lunch for 2026-06-04" [ref=e45] [cursor=pointer]:
+            - img [ref=e46]
+          - button "Add dinner for 2026-06-04" [ref=e47] [cursor=pointer]:
+            - img [ref=e48]
+        - generic [ref=e49]:
+          - generic [ref=e51]: Fri 5
+          - button "Add lunch for 2026-06-05" [ref=e52] [cursor=pointer]:
+            - img [ref=e53]
+          - button "Add dinner for 2026-06-05" [ref=e54] [cursor=pointer]:
+            - img [ref=e55]
+        - generic [ref=e56]:
+          - generic [ref=e58]: Sat 6
+          - button "Add lunch for 2026-06-06" [ref=e59] [cursor=pointer]:
+            - img [ref=e60]
+          - button "Add dinner for 2026-06-06" [ref=e61] [cursor=pointer]:
+            - img [ref=e62]
+        - generic [ref=e63]:
+          - generic [ref=e65]: Sun 7
+          - button "Add lunch for 2026-06-07" [ref=e66] [cursor=pointer]:
+            - img [ref=e67]
+          - button "Add dinner for 2026-06-07" [ref=e68] [cursor=pointer]:
+            - img [ref=e69]
+  - button "Add to plan" [ref=e70] [cursor=pointer]:
+    - img [ref=e71]
+    - generic [ref=e72]: Add to plan
+  - navigation [ref=e73]:
+    - link "Recipes" [ref=e74] [cursor=pointer]:
+      - /url: /recipes
+      - img [ref=e75]
+      - generic [ref=e77]: Recipes
+    - link "Planner" [ref=e78] [cursor=pointer]:
+      - /url: /planner
+      - img [ref=e79]
+      - generic [ref=e81]: Planner
+    - link "Grocery" [ref=e82] [cursor=pointer]:
+      - /url: /grocery
+      - img [ref=e83]
+      - generic [ref=e87]: Grocery
+    - link "Settings" [ref=e88] [cursor=pointer]:
+      - /url: /settings
+      - img [ref=e89]
+      - generic [ref=e92]: Settings
