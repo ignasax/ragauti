@@ -82,7 +82,7 @@ export function useAddGroceryItem(weekStart: string) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
       const { error } = await supabase.from('grocery_items').insert({
-        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Date.now(), user_id: user.id,
+        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false, sort_order: Math.floor(Date.now() / 1000), user_id: user.id,
       })
       if (error) throw error
     },
