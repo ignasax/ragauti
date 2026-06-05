@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart } from 'lucide-react'
+import { Heart, Utensils } from 'lucide-react'
 import { useToggleFavourite } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
 
@@ -11,7 +11,7 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
         <div className="aspect-square bg-warm-surface">
           {recipe.image_url
             ? <img src={recipe.image_url} alt={recipe.title} className="w-full h-full object-cover" loading="lazy" />
-            : <div aria-hidden="true" className="w-full h-full flex items-center justify-center text-4xl">🍽</div>
+            : <div aria-hidden="true" className="w-full h-full flex items-center justify-center"><Utensils className="w-10 h-10 text-warm-muted" /></div>
           }
         </div>
         <div className="p-3">
@@ -23,8 +23,8 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
       </Link>
       <button onClick={() => toggleFav({ id: recipe.id, is_favourite: !recipe.is_favourite })}
         aria-label={recipe.is_favourite ? 'Remove from favourites' : 'Add to favourites'}
-        className="absolute top-2 right-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-warm-base/70 rounded-full cursor-pointer touch-manipulation">
-        <Heart className={`w-4 h-4 ${recipe.is_favourite ? 'fill-warm-accent text-warm-accent' : 'text-warm-secondary'}`} />
+        className="absolute top-2 right-2 min-w-[44px] min-h-[44px] flex items-center justify-center bg-warm-base/70 rounded-full cursor-pointer touch-manipulation focus:outline-none focus:ring-2 focus:ring-warm-accent">
+        <Heart className={`w-4 h-4 transition-colors duration-150 ${recipe.is_favourite ? 'fill-warm-accent text-warm-accent' : 'text-warm-secondary'}`} />
       </button>
     </article>
   )
