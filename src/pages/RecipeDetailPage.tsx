@@ -77,9 +77,10 @@ export function RecipeDetailPage() {
           {recipe.rating ? <span>{'★'.repeat(Math.min(3, Math.max(0, Math.floor(recipe.rating))))}</span> : null}
           {recipe.servings ? (
             <span className="flex items-center gap-0.5">
-              {Array.from({ length: recipe.servings }).map((_, i) => (
+              {Array.from({ length: Math.min(4, recipe.servings) }).map((_, i) => (
                 <User key={i} className="w-3.5 h-3.5" aria-hidden="true" />
               ))}
+              {recipe.servings >= 5 && <span className="text-xs">+</span>}
             </span>
           ) : null}
         </div>
@@ -102,7 +103,23 @@ export function RecipeDetailPage() {
       <div className="px-4 pt-4 pb-8">
         {section === 'ingredients' && <ServingScaler ingredients={recipe.ingredients} baseServings={recipe.servings} />}
         {section === 'instructions' && <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">{recipe.instructions}</div>}
-        {section === 'notes' && <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">{recipe.comments || <span className="text-warm-muted">No notes yet.</span>}</div>}
+        {section === 'notes' && (
+          <div className="flex flex-col gap-4">
+            {recipe.comments
+              ? <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">{recipe.comments}</div>
+              : <p className="font-sans text-warm-muted text-[15px]">No notes yet.</p>
+            }
+            {recipe.source_url && (
+              <div>
+                <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Source</span>
+                <a href={recipe.source_url} target="_blank" rel="noopener noreferrer"
+                  className="font-sans text-warm-accent text-sm break-all underline underline-offset-2">
+                  {recipe.source_url}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
       {confirmDelete && (
         <div className="fixed inset-0 z-40 bg-warm-primary/30 backdrop-blur-sm flex items-end" onClick={() => setConfirmDelete(false)}>
