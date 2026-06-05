@@ -22,12 +22,11 @@ export function AddRecipePage() {
 
   // Auto-extract when arriving via share target
   useEffect(() => {
-    if (sharedUrl && geminiKey) {
+    if (sharedUrl && hasActiveKey) {
       setUrlInput(sharedUrl)
       handleExtract(sharedUrl)
     }
-    // Only fire when arriving with a shared URL or when key becomes available
-  }, [sharedUrl, geminiKey]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sharedUrl, hasActiveKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Remount RecipeForm with new initialData when extraction completes
   useEffect(() => {
