@@ -61,20 +61,20 @@ export function GeminiKeyProvider({ children }: { children: React.ReactNode }) {
 
   const setGeminiKey = async (key: string | null) => {
     if (!user) return
-    await supabase.from('profiles').update({ gemini_api_key: key }).eq('id', user.id)
     setGeminiKeyState(key)
+    await supabase.from('profiles').update({ gemini_api_key: key }).eq('id', user.id)
   }
 
   const setGroqKey = async (key: string | null) => {
     if (!user) return
-    await supabase.from('profiles').update({ groq_api_key: key }).eq('id', user.id)
     setGroqKeyState(key)
+    await supabase.from('profiles').update({ groq_api_key: key }).eq('id', user.id)
   }
 
   const setProvider = async (p: AIProvider) => {
     if (!user) return
-    await supabase.from('profiles').update({ ai_provider: p }).eq('id', user.id)
     setProviderState(p)
+    await supabase.from('profiles').update({ ai_provider: p }).eq('id', user.id)
   }
 
   return (
