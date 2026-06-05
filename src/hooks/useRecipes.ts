@@ -67,15 +67,24 @@ export function useToggleFavourite() {
     },
     onMutate: async ({ id, is_favourite }) => {
       await qc.cancelQueries({ queryKey: ['recipes'] })
-      const previous = qc.getQueryData<Recipe[]>(['recipes'])
+      await qc.cancelQueries({ queryKey: ['recipe', id] })
+      const previousList = qc.getQueryData<Recipe[]>(['recipes'])
+      const previousDetail = qc.getQueryData<Recipe>(['recipe', id])
       qc.setQueryData<Recipe[]>(['recipes'], old =>
         old?.map(r => r.id === id ? { ...r, is_favourite } : r) ?? []
       )
-      return { previous }
+      qc.setQueryData<Recipe>(['recipe', id], old =>
+        old ? { ...old, is_favourite } : old
+      )
+      return { previousList, previousDetail, id }
     },
-    onError: (_err, _vars, ctx) => {
-      if (ctx?.previous) qc.setQueryData(['recipes'], ctx.previous)
+    onError: (_err, { id }, ctx) => {
+      if (ctx?.previousList) qc.setQueryData(['recipes'], ctx.previousList)
+      if (ctx?.previousDetail) qc.setQueryData(['recipe', id], ctx.previousDetail)
     },
-    onSettled: () => qc.invalidateQueries({ queryKey: ['recipes'] }),
+    onSettled: (_data, _err, { id }) => {
+      qc.invalidateQueries({ queryKey: ['recipes'] })
+      qc.invalidateQueries({ queryKey: ['recipe', id] })
+    },
   })
 }

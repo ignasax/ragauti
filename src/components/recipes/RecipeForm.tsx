@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Star, X } from 'lucide-react'
+import { Star, X, Camera, ImagePlus } from 'lucide-react'
 import type { Recipe } from '../../types/app'
 
 type RecipeFormData = Omit<Recipe, 'id' | 'user_id' | 'created_at' | 'updated_at'>
@@ -53,9 +53,22 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
       <div>
         <label htmlFor="image" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Image</label>
         <input id="image" value={data.image_url ?? ''} onChange={e => set('image_url', e.target.value || null)} placeholder="Image URL" className={inputCls} />
-        <label htmlFor="image-file" className="sr-only">Upload image from device</label>
-        <input id="image-file" type="file" accept="image/*" capture="environment" className="mt-2 font-sans text-sm text-warm-secondary w-full"
-          onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
+        <div className="flex gap-2 mt-2">
+          <label htmlFor="image-camera"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            <Camera className="w-4 h-4" aria-hidden="true" />
+            Camera
+          </label>
+          <input id="image-camera" type="file" accept="image/*" capture="environment" className="sr-only"
+            onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
+          <label htmlFor="image-gallery"
+            className="flex-1 flex items-center justify-center gap-1.5 bg-warm-surface border border-warm-border text-warm-secondary font-sans text-sm px-3 py-2 rounded-lg min-h-[44px] cursor-pointer touch-manipulation active:opacity-70 transition-opacity">
+            <ImagePlus className="w-4 h-4" aria-hidden="true" />
+            Choose file
+          </label>
+          <input id="image-gallery" type="file" accept="image/*" className="sr-only"
+            onChange={e => { const f = e.target.files?.[0]; if (f) set('image_url', URL.createObjectURL(f)) }} />
+        </div>
       </div>
       <div className="flex gap-3">
         <div className="flex-1">

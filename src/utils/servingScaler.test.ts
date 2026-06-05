@@ -17,6 +17,16 @@ describe('scaleIngredients', () => {
   it('leaves lines with no number unchanged', () => {
     expect(scaleIngredients('a pinch of salt', 2)).toBe('a pinch of salt')
   })
+  it('scales numbers directly attached to metric units (1L, 500g, 400ml)', () => {
+    expect(scaleIngredients('1L beef stock', 2)).toBe('2L beef stock')
+    expect(scaleIngredients('500g mushrooms', 2)).toBe('1000g mushrooms')
+    expect(scaleIngredients('400ml coconut cream', 2)).toBe('800ml coconut cream')
+    expect(scaleIngredients('1.5L vegetable stock', 2)).toBe('3L vegetable stock')
+  })
+  it('scales numbers with a space before the unit', () => {
+    expect(scaleIngredients('800g chicken thighs', 2)).toBe('1600g chicken thighs')
+    expect(scaleIngredients('200g spaghetti', 3)).toBe('600g spaghetti')
+  })
   it('returns original on multiplier 1', () => {
     expect(scaleIngredients('3 tomatoes', 1)).toBe('3 tomatoes')
   })

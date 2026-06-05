@@ -10,19 +10,20 @@ function scaleLine(line: string, multiplier: number): string {
   )
   if (fractionResult !== line) return fractionResult
 
-  // Handle integers and decimals; adjust plurality of the following word when
-  // the original value was exactly 1 and the result is not 1 (or vice versa).
-  return line.replace(/\b(\d+(?:\.\d+)?)\b(\s+[a-zA-Z]+)?/, (_m, n, wordPart) => {
+  // Handle integers and decimals, optionally followed directly by a unit suffix
+  // (e.g. 1L, 500g, 400ml) or a space-separated word. Adjust plurality of the
+  // following space-separated word when transitioning between singular and plural.
+  return line.replace(/\b(\d+(?:\.\d+)?)([a-zA-Z]*)(\s+[a-zA-Z]+)?/, (_m, n, unit, wordPart) => {
     const original = parseFloat(n)
     const scaled = formatNumber(original * multiplier)
     const scaledNum = original * multiplier
 
-    if (!wordPart) return scaled
+    if (!wordPart) return scaled + unit
 
     const word = wordPart.trimStart()
     const space = wordPart.match(/^\s+/)?.[0] ?? ' '
     const adjustedWord = adjustPlurality(word, original, scaledNum)
-    return scaled + space + adjustedWord
+    return scaled + unit + space + adjustedWord
   })
 }
 
