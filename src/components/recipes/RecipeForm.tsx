@@ -191,6 +191,11 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         <textarea id="comments" rows={3} value={data.comments ?? ''} onChange={e => set('comments', e.target.value || null)}
           placeholder="Personal notes, tips..." className={`${inputCls} resize-none`} />
       </div>
+      <div>
+        <label htmlFor="source_url" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Source URL</label>
+        <input id="source_url" type="url" value={data.source_url ?? ''} onChange={e => set('source_url', e.target.value || null)}
+          placeholder="https://..." className={inputCls} />
+      </div>
 
       {error && <p className="font-sans text-sm text-red-600">{error}</p>}
       <div className="flex gap-3">
