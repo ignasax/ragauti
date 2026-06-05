@@ -28,7 +28,6 @@ export function useGeminiExtract() {
         throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')
       }
       const { html } = await res.json()
-      console.log('[scrape] html length:', html?.length, 'preview:', html?.slice(0, 300))
       const data = provider === 'groq'
         ? await extractRecipeWithGroq(html, activeKey)
         : await extractRecipe(html, activeKey)
