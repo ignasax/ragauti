@@ -1,7 +1,9 @@
 import { RecipeCard } from './RecipeCard'
 import type { Recipe } from '../../types/app'
 
-export function RecipeGrid({ recipes, isLoading }: { recipes: Recipe[]; isLoading: boolean }) {
+interface RecipeGridProps { recipes: Recipe[]; isLoading: boolean; ingredientSearch?: string }
+
+export function RecipeGrid({ recipes, isLoading, ingredientSearch }: RecipeGridProps) {
   if (isLoading) return (
     <div className="grid grid-cols-2 gap-3">
       {[...Array(6)].map((_, i) => (
@@ -23,7 +25,7 @@ export function RecipeGrid({ recipes, isLoading }: { recipes: Recipe[]; isLoadin
   )
   return (
     <div className="grid grid-cols-2 gap-3">
-      {recipes.map(r => <RecipeCard key={r.id} recipe={r} />)}
+      {recipes.map(r => <RecipeCard key={r.id} recipe={r} ingredientSearch={ingredientSearch} />)}
     </div>
   )
 }

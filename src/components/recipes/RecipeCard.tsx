@@ -3,8 +3,15 @@ import { Heart, Utensils } from 'lucide-react'
 import { useToggleFavourite } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
 
-export function RecipeCard({ recipe }: { recipe: Recipe }) {
+interface RecipeCardProps { recipe: Recipe; ingredientSearch?: string }
+
+export function RecipeCard({ recipe, ingredientSearch }: RecipeCardProps) {
   const { mutate: toggleFav } = useToggleFavourite()
+
+  const matchedIngredients = ingredientSearch
+    ? recipe.ingredients.split('\n').filter(l => l.trim() && l.toLowerCase().includes(ingredientSearch.toLowerCase())).slice(0, 3)
+    : []
+
   return (
     <article className="bg-warm-card border border-warm-border rounded-xl overflow-hidden relative">
       <Link to={`/recipes/${recipe.id}`} className="block active:opacity-90 transition-opacity duration-150">
@@ -19,6 +26,13 @@ export function RecipeCard({ recipe }: { recipe: Recipe }) {
           <p className="font-sans text-warm-secondary text-xs mt-1">
             {[recipe.cook_time_mins ? `${recipe.cook_time_mins} min` : '', recipe.rating ? '★'.repeat(recipe.rating) : ''].filter(Boolean).join(' · ')}
           </p>
+          {matchedIngredients.length > 0 && (
+            <ul className="mt-1.5 flex flex-col gap-0.5" aria-label="Matched ingredients">
+              {matchedIngredients.map((line, i) => (
+                <li key={i} className="font-sans text-[11px] text-warm-accent leading-snug truncate">· {line.trim()}</li>
+              ))}
+            </ul>
+          )}
         </div>
       </Link>
       <button onClick={() => toggleFav({ id: recipe.id, is_favourite: !recipe.is_favourite })}
