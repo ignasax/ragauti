@@ -4,32 +4,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Ragauti is a mobile-first recipe manager for personal use. Users paste a URL and Gemini scrapes the recipe, or add recipes manually. Includes meal planning (7-day) and grocery list generation. See `BRIEF_FINAL.md` for the full spec.
+Ragauti is a mobile-first recipe manager for personal use. Users paste a URL and AI scrapes the recipe automatically, or add recipes manually. Includes meal planning (7-day) and grocery list generation. See `BRIEF_FINAL.md` for the full spec.
 
-**Current status:** Part 1 (Classic mode) only. Do not start Chat mode (Part 2) until explicitly instructed.
+**Current status:** Part 1 (Classic mode) complete. Do not start Chat mode (Part 2) until explicitly instructed.
 
 ## Stack
 
-- **Frontend:** React + Vite
+- **Frontend:** React + Vite + TypeScript
 - **Backend/DB:** Supabase (Google OAuth, PostgreSQL, Row-Level Security)
 - **Hosting:** Vercel
-- **AI:** Gemini 1.5 Flash (client-side, using the user's own API key stored in Supabase)
+- **AI extraction:** Groq (`llama-3.3-70b-versatile`) or Gemini 2.0 Flash Lite — client-side, user's own API key stored in Supabase `profiles` table
+- **Web scraping:** Jina AI Reader (`r.jina.ai`) — Vercel serverless function proxies the URL through Jina, which returns clean LLM-ready markdown
 
 ## Commands
 
 ```bash
 npm run dev        # start Vite dev server
-npm run build      # production build
-npm run preview    # preview production build locally
 npm run lint       # ESLint
+node scripts/generate-icons.cjs   # regenerate PWA icons (icon-192.png, icon-512.png)
 ```
 
-Supabase local dev (once `supabase` CLI is initialized):
-```bash
-npx supabase start          # start local Supabase stack
-npx supabase db reset       # reset DB and re-run all migrations
-npx supabase gen types typescript --local > src/types/supabase.ts  # regenerate types
-```
+## Deployment
+
+**Push to git = deploy.** Vercel auto-builds and deploys on every push to master. Never run `npm run build` as a deploy step.
 
 ## Environment Variables
 
@@ -37,41 +34,57 @@ npx supabase gen types typescript --local > src/types/supabase.ts  # regenerate 
 VITE_SUPABASE_URL        Supabase project URL
 VITE_SUPABASE_ANON_KEY   Supabase publishable (anon) key
 VITE_GOOGLE_CLIENT_ID    Google OAuth client ID
-VITE_GEMINI_API_KEY      Local dev/testing only — never used in production
 ```
 
-`VITE_GEMINI_API_KEY` is for local development only. In production, the Gemini key always comes from `profiles.gemini_api_key` in Supabase. Never use the env var key in production code paths.
+No server-side AI keys. All AI calls are made client-side using the key from the user's Supabase profile.
 
 ## Architecture
 
 ### Auth
 
-Google OAuth only via Supabase Auth. No email/password. No user emails stored. The Supabase session is the single source of auth truth — check `supabase.auth.getUser()` on protected routes.
+Google OAuth only via Supabase Auth. No email/password. The Supabase session is the single source of auth truth.
 
-### Gemini API key
+### AI provider & key
 
-Each user stores their own Gemini API key in the `profiles` table in Supabase (not localStorage, not env vars). All Gemini calls are made client-side using the key fetched from the user's profile. Never use a shared server-side key.
+Each user stores their own AI API key in the `profiles` table (`gemini_api_key`, `groq_api_key`, `ai_provider`). Provider is either `'gemini'` or `'groq'` (default: `'gemini'`). All AI calls are made client-side. Never use a shared server-side key.
+
+Context: `src/contexts/GeminiKeyContext.tsx` — exposes `geminiKey`, `groqKey`, `provider`, setters, `isLoading`.
+
+### Recipe extraction flow
+
+1. User pastes URL → `/api/scrape?url=...` (Vercel serverless)
+2. Scrape endpoint fetches `https://r.jina.ai/{url}` → returns clean markdown text
+3. Client tries JSON-LD extraction first (`extractFromJsonLd` in `src/lib/gemini.ts`) — no AI needed if schema.org Recipe found
+4. Falls back to Groq (`src/lib/groq.ts`) or Gemini with a structured prompt
+5. `sanitizeExtracted` validates/cleans the JSON
+6. Form pre-filled; missing fields (title, ingredients, instructions, servings) listed in a warning banner
 
 ### Row-Level Security
 
-Every table (`recipes`, `meal_plans`, `grocery_lists`, `profiles`) has RLS enabled. Users can only read/write their own rows. Always write and test RLS policies in migrations — never rely on application-layer filtering alone.
+Every table (`recipes`, `meal_plans`, `grocery_lists`, `profiles`) has RLS enabled. Always write RLS policies in migrations — never rely on application-layer filtering alone.
 
-### Recipe scraping
+### Supabase migrations
 
-Scraping is client-triggered once per recipe save. The client sends the URL + user's Gemini key directly to the Gemini API. Gemini should extract: title, ingredients (with quantities), instructions, image URL, cook time, prep time, serving size. On partial extraction, pre-fill what was extracted and show a disclaimer prompting the user to fill in missing fields.
+- `001` — initial schema (recipes, meal_plans, grocery_lists, profiles)
+- `002`, `003` — recipe field additions
+- `004_ai_provider.sql` — adds `groq_api_key text` and `ai_provider text DEFAULT 'gemini'` to profiles. **Must be run in production via Supabase SQL Editor if not yet applied.**
 
 ### Serving size scaler
 
-A multiplier input on each recipe view that scales numeric quantities in the ingredients field. Best-effort regex on the ingredient strings — does not need to be perfect.
+`src/components/recipes/ServingScaler.tsx` — +/− stepper starting at the recipe's base servings. Scale factor = `selected / base`. Applied via `src/utils/servingScaler.ts` (best-effort regex on ingredient strings).
 
 ### Grocery list
 
-Ingredients are grouped by recipe, never merged across recipes. "2 cloves garlic (Salmon)" and "3 cloves garlic (Pasta)" stay as separate line items.
+Ingredients grouped by recipe, never merged across recipes.
 
 ### Mobile-first
 
-Every interaction must work one-handed on a phone. Image input supports both URL (from scraping) and device camera/upload via `<input type="file" accept="image/*" capture="environment">`.
+Every interaction must work one-handed. Touch targets min 44×44px. PWA with `skipWaiting: true` + `clientsClaim: true` so new deploys activate immediately on refresh.
 
-### Chat mode (Part 2 — not yet started)
+### PWA icons
 
-The architecture should support Chat mode being layered on top of the same Supabase data and Gemini key in Part 2. Actions Chat will need: add recipe to a meal slot, update grocery list, query recipes. Design data access patterns to be callable from both UI and a future chat handler.
+`public/icons/` — generated by `scripts/generate-icons.cjs` (Node.js, no dependencies). Orange background (#C8622A) with white spoon. Re-run the script to regenerate after design changes.
+
+### Chat mode (Part 2 — not started)
+
+Do not implement until explicitly instructed. Architecture is designed so Chat mode can layer on top of the same Supabase data and AI key.
