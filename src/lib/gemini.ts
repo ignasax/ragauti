@@ -18,9 +18,17 @@ export interface ExtractedRecipe {
 }
 
 export function htmlToText(html: string): string {
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  doc.querySelectorAll('script, style').forEach(el => el.remove())
-  return (doc.body?.textContent ?? '').replace(/\s+/g, ' ').trim()
+  return html
+    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
+    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function parseDuration(d: unknown): number | undefined {
@@ -70,10 +78,11 @@ function schemaToRecipe(r: Record<string, unknown>): ExtractedRecipe {
 }
 
 export function extractFromJsonLd(html: string): ExtractedRecipe | null {
-  const doc = new DOMParser().parseFromString(html, 'text/html')
-  for (const el of doc.querySelectorAll('script[type="application/ld+json"]')) {
+  const re = /<script[^>]+type=["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi
+  let m: RegExpExecArray | null
+  while ((m = re.exec(html)) !== null) {
     try {
-      const parsed = JSON.parse(el.textContent ?? '')
+      const parsed = JSON.parse(m[1])
       const items: unknown[] = Array.isArray(parsed) ? parsed : [parsed]
       for (const item of items) {
         const obj = item as Record<string, unknown>
