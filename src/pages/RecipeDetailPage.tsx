@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Pencil, Trash2, Heart } from 'lucide-react'
+import { ChevronLeft, Pencil, Trash2, Heart, User } from 'lucide-react'
 import { useRecipe } from '../hooks/useRecipe'
 import { useDeleteRecipe, useToggleFavourite } from '../hooks/useRecipes'
 import { ServingScaler } from '../components/recipes/ServingScaler'
@@ -104,7 +104,13 @@ export function RecipeDetailPage() {
           {recipe.prep_time_mins ? <span>Prep {recipe.prep_time_mins} min</span> : null}
           {recipe.cook_time_mins ? <span>Cook {recipe.cook_time_mins} min</span> : null}
           {recipe.rating ? <span>{'★'.repeat(Math.min(3, Math.max(0, Math.floor(recipe.rating))))}</span> : null}
-          {recipe.servings ? <span>{recipe.servings} srv</span> : null}
+          {recipe.servings ? (
+            <span className="flex items-center gap-0.5">
+              {Array.from({ length: recipe.servings }).map((_, i) => (
+                <User key={i} className="w-3.5 h-3.5" aria-hidden="true" />
+              ))}
+            </span>
+          ) : null}
         </div>
         {(recipe.categories?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">

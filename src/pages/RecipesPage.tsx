@@ -41,19 +41,15 @@ export function RecipesPage() {
           onChange={setSearch}
           placeholder={searchMode === 'name' ? 'Search by name…' : 'e.g. tomato, chicken…'}
         />
-        <div className="flex gap-2">
-          <button className={pillCls(searchMode === 'name')} onClick={() => handleModeChange('name')}>Name</button>
-          <button className={pillCls(searchMode === 'ingredient')} onClick={() => handleModeChange('ingredient')}>Ingredients</button>
+        <div className="flex gap-2 overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
+          <button className={`flex-shrink-0 ${pillCls(searchMode === 'name')}`} onClick={() => handleModeChange('name')}>Name</button>
+          <button className={`flex-shrink-0 ${pillCls(searchMode === 'ingredient')}`} onClick={() => handleModeChange('ingredient')}>Ingredients</button>
+          {searchMode === 'ingredient' && ingredientTerms.map(term => (
+            <span key={term} className="flex-shrink-0 bg-warm-accent/15 text-warm-accent font-sans text-xs px-2.5 py-1 rounded-full self-center">
+              {term}
+            </span>
+          ))}
         </div>
-        {searchMode === 'ingredient' && ingredientTerms.length > 0 && (
-          <div className="flex flex-wrap gap-1.5">
-            {ingredientTerms.map(term => (
-              <span key={term} className="bg-warm-accent/15 text-warm-accent font-sans text-xs px-2.5 py-1 rounded-full">
-                {term}
-              </span>
-            ))}
-          </div>
-        )}
       </div>
       <FilterChips filters={filters} allCategories={allCategories} onChange={setFilters} />
       <RecipeGrid recipes={filtered} isLoading={isLoading} ingredientTerms={searchMode === 'ingredient' ? ingredientTerms : undefined} />

@@ -31,7 +31,7 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
             to={`/recipes/${slot.recipe.id}`}
             className="flex items-center flex-1 min-w-0 py-2 min-h-[80px] active:opacity-70 transition-opacity"
           >
-            <span className="font-sans text-sm font-bold text-warm-primary line-clamp-3 flex-1 leading-tight">{slot.recipe.title}</span>
+            <span className="font-sans text-[15px] font-bold text-warm-primary line-clamp-3 flex-1 leading-snug">{slot.recipe.title}</span>
           </Link>
           <button onClick={() => removeSlot({ id: slot.id, slot_date: date })}
             aria-label="Remove from plan"

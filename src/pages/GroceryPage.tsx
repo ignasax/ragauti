@@ -89,14 +89,14 @@ export function GroceryPage() {
             onClick={() => items.length > 0 ? setConfirmRegen(true) : handleGenerate()}
             disabled={isGenerating}
             aria-label={isGenerating ? 'Generating…' : 'Generate weekly list'}
-            className="bg-warm-surface border border-warm-border text-warm-accent min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 disabled:opacity-50 cursor-pointer touch-manipulation">
+            className="bg-warm-accent text-white min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
             <RefreshCcw className={`w-4 h-4 ${isGenerating ? 'animate-spin' : ''}`} aria-hidden="true" />
           </button>
           {items.length > 0 && (
             <button
               onClick={() => setConfirmClear(true)}
               aria-label="Clear all"
-              className="bg-warm-surface border border-warm-border text-warm-accent min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
+              className="bg-warm-surface border border-warm-border text-warm-secondary min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg active:opacity-70 cursor-pointer touch-manipulation">
               <Trash2 className="w-4 h-4" aria-hidden="true" />
             </button>
           )}
