@@ -145,7 +145,7 @@ export function sanitizeExtracted(raw: unknown): ExtractedRecipe {
   if (typeof obj.instructions === 'string') result.instructions = obj.instructions
   if (typeof obj.cook_time_mins === 'number' && Number.isFinite(obj.cook_time_mins)) result.cook_time_mins = Math.max(0, Math.floor(obj.cook_time_mins))
   if (typeof obj.prep_time_mins === 'number' && Number.isFinite(obj.prep_time_mins)) result.prep_time_mins = Math.max(0, Math.floor(obj.prep_time_mins))
-  if (typeof obj.servings === 'number' && Number.isFinite(obj.servings)) result.servings = Math.max(1, Math.floor(obj.servings))
+  if (typeof obj.servings === 'number' && Number.isFinite(obj.servings)) result.servings = Math.max(0, Math.floor(obj.servings))
   if (typeof obj.image_url === 'string') {
     try {
       const u = new URL(obj.image_url)

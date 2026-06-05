@@ -131,13 +131,14 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
           <input id="cook" type="number" min={0} value={data.cook_time_mins ?? ''} onChange={e => set('cook_time_mins', e.target.value ? parseInt(e.target.value) : null)} className={inputCls} />
         </div>
         <div className="flex-1">
-          <label htmlFor="servings" className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Servings</label>
-          <select id="servings" value={data.servings ?? 1} onChange={e => set('servings', parseInt(e.target.value))} className={inputCls}>
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3">3</option>
-            <option value="4">4</option>
-          </select>
+          <label className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-1">Servings</label>
+          <div className={`${inputCls} flex items-center justify-between px-2`}>
+            <button type="button" onClick={() => set('servings', Math.max(1, (data.servings ?? 1) - 1))}
+              className="w-8 h-8 flex items-center justify-center text-warm-primary font-bold text-lg cursor-pointer touch-manipulation">−</button>
+            <span className="font-sans text-warm-primary text-base w-6 text-center">{data.servings ?? 1}</span>
+            <button type="button" onClick={() => set('servings', Math.min(10, (data.servings ?? 1) + 1))}
+              className="w-8 h-8 flex items-center justify-center text-warm-primary font-bold text-lg cursor-pointer touch-manipulation">+</button>
+          </div>
         </div>
       </div>
 

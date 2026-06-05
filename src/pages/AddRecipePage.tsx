@@ -74,7 +74,7 @@ export function AddRecipePage() {
       </div>
       <RecipeForm
         key={formKey}
-        initialData={extracted ?? undefined}
+        initialData={extracted ? { ...extracted, source_url: urlInput } : undefined}
         topSlot={topSlot}
         submitLabel="Save Recipe"
         isSubmitting={isPending}

@@ -32,7 +32,10 @@ export function useGeminiExtract() {
         ? await extractRecipeWithGroq(html, activeKey)
         : await extractRecipe(html, activeKey)
       const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
-      const missingFields = required.filter(k => !data[k])
+      const missingFields = [
+        ...required.filter(k => !data[k]),
+        ...((!data.servings || data.servings === 0) ? ['servings'] : []),
+      ]
       setState({ isExtracting: false, extracted: data, error: null, missingFields })
     } catch (err) {
       setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })

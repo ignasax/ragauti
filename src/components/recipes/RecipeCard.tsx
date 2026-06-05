@@ -34,9 +34,10 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
             {recipe.rating && recipe.servings ? <span className="text-warm-border text-xs">·</span> : null}
             {recipe.servings ? (
               <span className="flex items-center gap-0.5 flex-shrink-0">
-                {Array.from({ length: recipe.servings }).map((_, i) => (
+                {Array.from({ length: Math.min(4, recipe.servings) }).map((_, i) => (
                   <User key={i} className="w-2.5 h-2.5 text-warm-secondary" aria-hidden="true" />
                 ))}
+                {recipe.servings >= 5 && <span className="font-sans text-warm-secondary text-[10px] leading-none">+</span>}
               </span>
             ) : null}
           </div>

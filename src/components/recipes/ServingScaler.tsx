@@ -3,7 +3,7 @@ import { scaleIngredients } from '../../utils/servingScaler'
 
 export function ServingScaler({ ingredients, baseServings }: { ingredients: string; baseServings: number | null }) {
   const base = Math.max(1, baseServings ?? 1)
-  const [selected, setSelected] = useState(base > 4 ? 4 : base)
+  const [selected, setSelected] = useState(base)
   const multiplier = selected / base
 
   return (
@@ -12,15 +12,12 @@ export function ServingScaler({ ingredients, baseServings }: { ingredients: stri
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider">
           Servings
         </span>
-        <div className="flex gap-1 ml-auto">
-          {[1, 2, 3, 4].map(n => (
-            <button key={n} onClick={() => setSelected(n)}
-              className={`font-sans text-xs px-2.5 py-1.5 rounded-lg min-h-[36px] min-w-[36px] cursor-pointer touch-manipulation transition-colors ${
-                selected === n ? 'bg-warm-accent text-white' : 'bg-warm-surface text-warm-secondary border border-warm-border'
-              }`}>
-              {n}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 ml-auto">
+          <button onClick={() => setSelected(s => Math.max(1, s - 1))}
+            className="w-9 h-9 flex items-center justify-center bg-warm-surface border border-warm-border rounded-lg font-bold text-warm-primary cursor-pointer touch-manipulation active:opacity-70">−</button>
+          <span className="font-sans text-warm-primary text-sm font-semibold w-6 text-center">{selected}</span>
+          <button onClick={() => setSelected(s => s + 1)}
+            className="w-9 h-9 flex items-center justify-center bg-warm-surface border border-warm-border rounded-lg font-bold text-warm-primary cursor-pointer touch-manipulation active:opacity-70">+</button>
         </div>
       </div>
       <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">
