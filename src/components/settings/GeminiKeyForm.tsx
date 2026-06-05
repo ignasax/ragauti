@@ -3,9 +3,14 @@ import { useGeminiKey, type AIProvider } from '../../contexts/GeminiKeyContext'
 
 const PROVIDER_LABEL: Record<AIProvider, string> = { gemini: 'Gemini', groq: 'Groq' }
 const PROVIDER_HINT:  Record<AIProvider, string> = { gemini: 'AIza…', groq: 'gsk_…' }
-const PROVIDER_DESC:  Record<AIProvider, string> = {
+const PROVIDER_DESC: Record<AIProvider, string> = {
   gemini: 'Google Gemini — requires billing in EU/EEA regions.',
-  groq:   'Groq — free globally, no billing needed. Get a key at groq.com.',
+  groq:   'Groq — free globally, no billing needed.',
+}
+
+const PROVIDER_KEY_URL: Record<AIProvider, string> = {
+  gemini: 'https://aistudio.google.com/apikey',
+  groq:   'https://console.groq.com/keys',
 }
 
 export function GeminiKeyForm() {
@@ -105,7 +110,13 @@ export function GeminiKeyForm() {
               ))}
             </div>
           )}
-          <p className="font-sans text-warm-muted text-xs mt-1.5">{PROVIDER_DESC[provider]}</p>
+          <p className="font-sans text-warm-muted text-xs mt-1.5">
+            {PROVIDER_DESC[provider]}{' '}
+            <a href={PROVIDER_KEY_URL[provider]} target="_blank" rel="noopener noreferrer"
+              className="text-warm-accent underline underline-offset-2">
+              Get a free key →
+            </a>
+          </p>
         </div>
 
         {/* Key field */}

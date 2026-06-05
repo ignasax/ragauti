@@ -1,12 +1,16 @@
+import { useState } from 'react'
 import { supabase } from '../lib/supabase'
 import { useAuth } from '../contexts/AuthContext'
 import { GeminiKeyForm } from '../components/settings/GeminiKeyForm'
+import { TermsModal } from '../components/TermsModal'
+import { PrivacyModal } from '../components/PrivacyModal'
 
 export function SettingsPage() {
   const { user } = useAuth()
+  const [modal, setModal] = useState<'terms' | 'privacy' | null>(null)
 
   return (
-    <div className="px-4 pt-4 flex flex-col gap-6">
+    <div className="px-4 pt-4 pb-8 flex flex-col gap-6">
       <h1 className="font-serif text-2xl font-bold text-warm-primary">Settings</h1>
 
       <div className="bg-warm-card border border-warm-border rounded-xl p-4 flex items-center gap-3">
@@ -33,6 +37,22 @@ export function SettingsPage() {
       >
         Sign out
       </button>
+
+      {/* Legal */}
+      <div className="flex gap-4 justify-center pt-2">
+        <button onClick={() => setModal('terms')}
+          className="font-sans text-warm-muted text-xs underline underline-offset-2 cursor-pointer touch-manipulation">
+          Terms of Service
+        </button>
+        <span className="text-warm-muted text-xs">·</span>
+        <button onClick={() => setModal('privacy')}
+          className="font-sans text-warm-muted text-xs underline underline-offset-2 cursor-pointer touch-manipulation">
+          Privacy Policy
+        </button>
+      </div>
+
+      {modal === 'terms'   && <TermsModal   onClose={() => setModal(null)} />}
+      {modal === 'privacy' && <PrivacyModal onClose={() => setModal(null)} />}
     </div>
   )
 }
