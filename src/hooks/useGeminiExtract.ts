@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { extractRecipe, type ExtractedRecipe } from '../lib/gemini'
 import { extractRecipeWithGroq } from '../lib/groq'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
+import { supabase } from '../lib/supabase'
 
 interface ExtractionState {
   isExtracting: boolean
@@ -22,7 +23,10 @@ export function useGeminiExtract() {
     if (!activeKey) return
     setState({ isExtracting: true, extracted: null, error: null, missingFields: [] })
     try {
-      const res = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`)
+      const { data: { session } } = await supabase.auth.getSession()
+      const res = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`, {
+        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      })
       if (!res.ok) {
         const body = await res.json().catch(() => null)
         throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')

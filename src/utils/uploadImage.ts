@@ -17,7 +17,12 @@ async function compressImage(file: File, maxPx = 1200, quality = 0.82): Promise<
   })
 }
 
+const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/heic', 'image/heif']
+
 export async function uploadRecipeImage(file: File, userId: string): Promise<string> {
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error('Only image files are allowed (JPEG, PNG, WebP, GIF)')
+  }
   const compressed = await compressImage(file)
   const path = `${userId}/${Date.now()}.jpg`
   const { error } = await supabase.storage

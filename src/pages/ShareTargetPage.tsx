@@ -9,8 +9,13 @@ export function ShareTargetPage() {
   useEffect(() => {
     if (redirected.current) return
     redirected.current = true
-    const url = params.get('url')
-    navigate('/recipes/new', { state: { sharedUrl: url }, replace: true })
+    const raw = params.get('url')
+    let sharedUrl: string | null = null
+    try {
+      const parsed = new URL(raw ?? '')
+      if (parsed.protocol === 'https:' || parsed.protocol === 'http:') sharedUrl = raw
+    } catch { /* invalid URL — ignore */ }
+    navigate('/recipes/new', { state: { sharedUrl }, replace: true })
   }, [navigate, params])
 
   return <div className="min-h-screen bg-warm-base" />
