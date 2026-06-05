@@ -1,4 +1,4 @@
-import { htmlToText, extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe } from './gemini'
+import { extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe } from './gemini'
 
 export async function extractRecipeWithGroq(html: string, key: string): Promise<ExtractedRecipe> {
   const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
