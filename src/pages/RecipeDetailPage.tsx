@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ChevronLeft, Pencil, Trash2, Heart, User } from 'lucide-react'
+import { ChevronLeft, Pencil, Trash2, Heart } from 'lucide-react'
 import { useRecipe } from '../hooks/useRecipe'
 import { useDeleteRecipe, useToggleFavourite } from '../hooks/useRecipes'
 import { ServingScaler } from '../components/recipes/ServingScaler'
@@ -78,18 +78,21 @@ export function RecipeDetailPage() {
       )}
       <div className="px-4 pt-4 pb-2">
         <h1 className="font-serif text-2xl font-bold text-warm-primary mb-1">{recipe.title}</h1>
-        <div className="flex flex-wrap gap-3 font-sans text-warm-secondary text-sm">
-          {recipe.prep_time_mins ? <span>Prep {recipe.prep_time_mins} min</span> : null}
-          {recipe.cook_time_mins ? <span>Cook {recipe.cook_time_mins} min</span> : null}
-          {recipe.rating ? <span>{'★'.repeat(Math.min(3, Math.max(0, Math.floor(recipe.rating))))}</span> : null}
-          {recipe.servings ? (
-            <span className="flex items-center gap-0.5">
-              {Array.from({ length: Math.min(4, recipe.servings) }).map((_, i) => (
-                <User key={i} className="w-3.5 h-3.5" aria-hidden="true" />
-              ))}
-              {recipe.servings >= 5 && <span className="text-xs">+</span>}
+        <div className="flex items-center flex-nowrap font-sans text-warm-secondary text-sm overflow-hidden">
+          {[
+            (recipe.prep_time_mins || recipe.cook_time_mins)
+              ? `${(recipe.prep_time_mins ?? 0) + (recipe.cook_time_mins ?? 0)} min`
+              : null,
+            recipe.rating
+              ? '★'.repeat(Math.min(5, Math.max(0, Math.floor(recipe.rating))))
+              : null,
+            recipe.servings ? `${recipe.servings} servings` : null,
+          ].filter(Boolean).map((item, i) => (
+            <span key={i} className="flex items-center whitespace-nowrap">
+              {i > 0 && <span className="mx-2 text-base leading-none text-warm-border select-none">·</span>}
+              {item}
             </span>
-          ) : null}
+          ))}
         </div>
         {(recipe.categories?.length ?? 0) > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">

@@ -36,7 +36,7 @@ export function GroceryGroup({
 
   const activateAdd = () => {
     setAdding(true)
-    setTimeout(() => inputRef.current?.focus(), 50)
+    inputRef.current?.focus()
   }
 
   const commitAdd = () => {
@@ -90,44 +90,41 @@ export function GroceryGroup({
           </div>
         ))}
         {items.length > 0 && <div className="border-t border-warm-border mx-3" />}
-        {adding ? (
-          <div className="flex items-center gap-2 px-3 min-h-[44px]">
-            <div className="w-5 h-5 rounded border-2 border-dashed border-warm-border flex-shrink-0" />
-            <input
-              ref={inputRef}
-              type="text"
-              value={addText}
-              onChange={e => setAddText(e.target.value)}
-              onBlur={commitAdd}
-              onKeyDown={e => {
-                if (e.key === 'Enter') commitAdd()
-                if (e.key === 'Escape') cancelAdd()
-              }}
-              placeholder="add item…"
-              className="flex-1 font-sans text-base bg-transparent border-none outline-none border-b border-warm-accent min-w-0 py-2 text-warm-primary placeholder:text-warm-muted"
-            />
-            <button
-              onMouseDown={e => e.preventDefault()}
-              onClick={commitAdd}
-              aria-label="Add item"
-              className="w-7 h-7 flex items-center justify-center bg-warm-accent rounded-md text-white text-sm cursor-pointer touch-manipulation"
-            >✓</button>
-            <button
-              onMouseDown={e => e.preventDefault()}
-              onClick={cancelAdd}
-              aria-label="Cancel"
-              className="w-7 h-7 flex items-center justify-center border border-warm-border rounded-md text-warm-secondary text-sm cursor-pointer touch-manipulation"
-            >✕</button>
-          </div>
-        ) : (
+        <div className={`flex items-center gap-2 px-3 min-h-[44px] ${adding ? '' : 'hidden'}`}>
+          <div className="w-5 h-5 rounded border-2 border-dashed border-warm-border flex-shrink-0" />
+          <input
+            ref={inputRef}
+            type="text"
+            value={addText}
+            onChange={e => setAddText(e.target.value)}
+            onBlur={commitAdd}
+            onKeyDown={e => {
+              if (e.key === 'Enter') commitAdd()
+              if (e.key === 'Escape') cancelAdd()
+            }}
+            placeholder="add item…"
+            className="flex-1 font-sans text-base bg-transparent border-none outline-none border-b border-warm-accent min-w-0 py-2 text-warm-primary placeholder:text-warm-muted"
+          />
           <button
-            onClick={activateAdd}
-            className="flex items-center gap-2 px-3 min-h-[44px] w-full text-left cursor-pointer touch-manipulation active:bg-warm-surface"
-          >
-            <div className="w-5 h-5 rounded border-2 border-dashed border-warm-border flex-shrink-0" />
-            <span className="font-sans text-base text-warm-muted">add item…</span>
-          </button>
-        )}
+            onMouseDown={e => e.preventDefault()}
+            onClick={commitAdd}
+            aria-label="Add item"
+            className="w-7 h-7 flex items-center justify-center bg-warm-accent rounded-md text-white text-sm cursor-pointer touch-manipulation"
+          >✓</button>
+          <button
+            onMouseDown={e => e.preventDefault()}
+            onClick={cancelAdd}
+            aria-label="Cancel"
+            className="w-7 h-7 flex items-center justify-center border border-warm-border rounded-md text-warm-secondary text-sm cursor-pointer touch-manipulation"
+          >✕</button>
+        </div>
+        <button
+          onClick={activateAdd}
+          className={`${adding ? 'hidden' : ''} flex items-center gap-2 px-3 min-h-[44px] w-full text-left cursor-pointer touch-manipulation active:bg-warm-surface`}
+        >
+          <div className="w-5 h-5 rounded border-2 border-dashed border-warm-border flex-shrink-0" />
+          <span className="font-sans text-base text-warm-muted">add item…</span>
+        </button>
       </div>
     </div>
   )
