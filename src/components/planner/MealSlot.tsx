@@ -25,7 +25,7 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
   if (slot?.recipe) {
     return (
       <>
-        <div className="relative bg-warm-surface rounded-lg overflow-hidden min-h-[80px]">
+        <div className="relative bg-warm-surface rounded-lg overflow-hidden h-[80px]">
           <button
             onClick={() => removeSlot({ id: slot.id, slot_date: date })}
             aria-label="Remove from plan"
@@ -35,7 +35,7 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
           </button>
           <Link
             to={`/recipes/${slot.recipe.id}`}
-            className="flex items-stretch min-h-[80px] active:opacity-70 transition-opacity"
+            className="flex items-stretch h-full active:opacity-70 transition-opacity"
           >
             <div className="w-14 flex-shrink-0 bg-warm-border">
               {slot.recipe.image_url
@@ -43,7 +43,7 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
                 : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-4 h-4 text-warm-muted" /></div>
               }
             </div>
-            <span className="font-sans text-sm font-semibold text-warm-primary line-clamp-2 flex-1 leading-snug self-center p-2 pr-7">{slot.recipe.title}</span>
+            <span className="font-sans text-sm font-semibold text-warm-primary line-clamp-2 min-w-0 flex-1 leading-snug self-center p-2 pr-7">{slot.recipe.title}</span>
           </Link>
         </div>
         {picking && <RecipePicker onSelect={handleSelect} onClose={() => setPicking(false)} />}
