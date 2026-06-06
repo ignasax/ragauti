@@ -129,7 +129,7 @@ export function RecipeDetailPage() {
                   { onSuccess: () => showToast('Added to grocery list') }
                 )
               }}
-              disabled={isAddingToGrocery}
+              disabled={isAddingToGrocery || !recipe.ingredients?.trim()}
               className="w-full bg-warm-accent text-white font-sans font-semibold text-sm py-3 rounded-xl min-h-[44px] active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation flex items-center justify-center gap-2"
             >
               🛒 Add to grocery list
