@@ -1,5 +1,5 @@
 import { useRef, useState } from 'react'
-import { RotateCcw, Camera } from 'lucide-react'
+import { RotateCcw, Camera, Plus } from 'lucide-react'
 import { useFridge } from '../contexts/FridgeContext'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
 import { useRecipes } from '../hooks/useRecipes'
@@ -26,36 +26,59 @@ export function FridgePage() {
   const { data: recipes = [] } = useRecipes()
   const { showToast } = useToast()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const [addText, setAddText] = useState('')
+  const scanModeRef = useRef<'replace' | 'add'>('replace')
+  const [isAddingPhoto, setIsAddingPhoto] = useState(false)
 
   const hasKey = provider === 'groq' ? !!groqKey : !!geminiKey
 
-  const openCamera = () => fileInputRef.current?.click()
+  const openCamera = () => {
+    scanModeRef.current = 'replace'
+    fileInputRef.current?.click()
+  }
+
+  const openCameraAdditive = () => {
+    scanModeRef.current = 'add'
+    fileInputRef.current?.click()
+  }
 
   const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
     e.target.value = ''
-    startScan()
+    const isAdditive = scanModeRef.current === 'add'
+
+    if (!isAdditive) {
+      startScan()
+    } else {
+      setIsAddingPhoto(true)
+    }
+
     try {
       const base64 = await fileToBase64(file)
-      const ingredients =
+      const newIngredients =
         provider === 'groq' && groqKey
           ? await detectFridgeIngredientsWithGroq(base64, file.type, groqKey)
           : await detectFridgeIngredients(base64, file.type, geminiKey!)
-      setScanResult(ingredients)
+
+      if (isAdditive) {
+        const existingLower = new Set(detected.map(d => d.toLowerCase()))
+        const toAdd = newIngredients.filter(i => !existingLower.has(i.toLowerCase()))
+        updateDetected([...detected, ...toAdd])
+        if (toAdd.length > 0) {
+          showToast(`+${toAdd.length} ingredient${toAdd.length === 1 ? '' : 's'} found`)
+        } else {
+          showToast('No new ingredients found')
+        }
+      } else {
+        setScanResult(newIngredients)
+      }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Failed to scan fridge'
       setScanError(msg)
       showToast(msg, 'error')
+    } finally {
+      if (isAdditive) setIsAddingPhoto(false)
     }
-  }
-
-  const addChip = () => {
-    const text = addText.trim().toLowerCase()
-    if (!text) return
-    if (!detected.includes(text)) updateDetected([...detected, text])
-    setAddText('')
   }
 
   const removeChip = (chip: string) => updateDetected(detected.filter(d => d !== chip))
@@ -69,14 +92,28 @@ export function FridgePage() {
       <div className="flex items-center justify-between">
         <h1 className="font-serif text-2xl font-bold text-warm-primary">Fridge</h1>
         {status === 'results' && (
-          <button
-            onClick={() => { reset(); openCamera() }}
-            aria-label="Rescan"
-            className="flex items-center gap-1.5 font-sans text-sm text-warm-accent cursor-pointer touch-manipulation"
-          >
-            <RotateCcw className="w-4 h-4" />
-            Rescan
-          </button>
+          <div className="flex items-center gap-3">
+            <button
+              onClick={openCameraAdditive}
+              disabled={isAddingPhoto}
+              aria-label="Add another photo"
+              className="flex items-center gap-1.5 font-sans text-sm text-warm-accent cursor-pointer touch-manipulation disabled:opacity-50"
+            >
+              {isAddingPhoto
+                ? <div className="w-4 h-4 border-2 border-warm-accent border-t-transparent rounded-full animate-spin" />
+                : <Plus className="w-4 h-4" />
+              }
+              Add photo
+            </button>
+            <button
+              onClick={() => { reset(); openCamera() }}
+              aria-label="Rescan"
+              className="flex items-center gap-1.5 font-sans text-sm text-warm-accent cursor-pointer touch-manipulation"
+            >
+              <RotateCcw className="w-4 h-4" />
+              Rescan
+            </button>
+          </div>
         )}
       </div>
 
@@ -115,27 +152,6 @@ export function FridgePage() {
 
       {status === 'results' && (
         <>
-          {/* Chip add input */}
-          <div className="flex items-center gap-2 bg-warm-card border border-warm-accent rounded-2xl px-3 py-1.5 min-h-[40px]">
-            <span className="text-warm-accent font-bold text-lg leading-none">+</span>
-            <input
-              type="text"
-              value={addText}
-              onChange={e => setAddText(e.target.value)}
-              onKeyDown={e => { if (e.key === 'Enter') addChip() }}
-              placeholder="add ingredient…"
-              className="flex-1 font-sans text-sm bg-transparent border-none outline-none text-warm-primary placeholder:text-warm-muted"
-            />
-            {addText.trim() && (
-              <button
-                onClick={addChip}
-                className="font-sans text-xs text-warm-accent font-semibold cursor-pointer touch-manipulation"
-              >
-                Add
-              </button>
-            )}
-          </div>
-
           {/* Detected ingredient chips */}
           {detected.length > 0 && (
             <div className="flex flex-wrap gap-2">
@@ -156,7 +172,7 @@ export function FridgePage() {
           {fridgeRecipes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-center gap-2">
               <p className="font-serif text-warm-secondary text-lg">No matches found</p>
-              <p className="font-sans text-warm-muted text-sm">Try adding more ingredients or rescanning</p>
+              <p className="font-sans text-warm-muted text-sm">Try scanning another angle or rescan</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-3 pb-8">
