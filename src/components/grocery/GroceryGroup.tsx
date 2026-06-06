@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { Check, Trash2 } from 'lucide-react'
 import { GroceryItem } from './GroceryItem'
 import {
@@ -35,7 +36,7 @@ export function GroceryGroup({
   const allChecked = items.length > 0 && items.every(i => i.is_checked)
 
   const activateAdd = () => {
-    setAdding(true)
+    flushSync(() => setAdding(true))
     inputRef.current?.focus()
   }
 
