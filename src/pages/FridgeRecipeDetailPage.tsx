@@ -8,6 +8,7 @@ import { useFridge } from '../contexts/FridgeContext'
 import { useToast } from '../contexts/ToastContext'
 import { ServingScaler } from '../components/recipes/ServingScaler'
 import { getFridgeIngredientBreakdown } from '../utils/recipeFilter'
+import { HOUSEHOLD_PANTRY } from '../constants/pantry'
 import { scaleIngredients } from '../utils/servingScaler'
 import { getLocalDateStr } from '../hooks/useMealPlan'
 
@@ -35,7 +36,11 @@ export function FridgeRecipeDetailPage() {
 
   const base = Math.max(1, recipe.servings ?? 1)
   const selected = Math.round(base * multiplier)
-  const { matched, missing } = getFridgeIngredientBreakdown(recipe, detected, multiplier)
+  const pantryLower = new Set(HOUSEHOLD_PANTRY.map(p => p.toLowerCase()))
+  const allAvailable = [...detected, ...HOUSEHOLD_PANTRY]
+  const { matched, missing } = getFridgeIngredientBreakdown(recipe, allAvailable, multiplier)
+  const fridgeMatched = matched.filter(m => !pantryLower.has(m.detectedName.toLowerCase()))
+  const pantryMatched = matched.filter(m => pantryLower.has(m.detectedName.toLowerCase()))
 
   const handleAddToGrocery = () => {
     const weekStart = getLocalDateStr(0)
@@ -138,7 +143,7 @@ export function FridgeRecipeDetailPage() {
           )}
           {/* Fridge match badge */}
           <div className="inline-flex items-center gap-1.5 bg-warm-accent/10 border border-warm-accent/30 rounded-full px-3 py-1 font-sans text-sm text-warm-accent">
-            🧊 {matched.length} of {matched.length + missing.length} ingredients in your fridge
+            🧊 {fridgeMatched.length} from fridge{pantryMatched.length > 0 ? ` · 📦 ${pantryMatched.length} pantry` : ''}
           </div>
         </div>
 
@@ -150,18 +155,36 @@ export function FridgeRecipeDetailPage() {
           onScaleChange={(m) => setMultiplier(m)}
         />
 
-        {/* Detected section */}
-        {matched.length > 0 && (
+        {/* From fridge section */}
+        {fridgeMatched.length > 0 && (
           <div>
             <div className="flex items-center gap-2 mb-2">
-              <span className="font-sans font-semibold text-[12px] text-green-600">✓ Detected</span>
+              <span className="font-sans font-semibold text-[12px] text-green-600">✓ From your fridge</span>
               <div className="flex-1 h-px bg-green-100" />
             </div>
             <div className="flex flex-col gap-2">
-              {matched.map((item, i) => (
+              {fridgeMatched.map((item, i) => (
                 <div key={i} className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
                   <div className="font-sans font-semibold text-sm text-green-800 capitalize">{item.detectedName}</div>
                   <div className="font-sans text-[11px] text-green-600 mt-0.5">{item.scaledIngredient}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* From pantry section */}
+        {pantryMatched.length > 0 && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-sans font-semibold text-[12px] text-warm-accent">📦 From pantry</span>
+              <div className="flex-1 h-px bg-warm-accent/20" />
+            </div>
+            <div className="flex flex-col gap-2">
+              {pantryMatched.map((item, i) => (
+                <div key={i} className="bg-warm-accent/5 border border-warm-accent/20 rounded-lg px-3 py-2">
+                  <div className="font-sans font-semibold text-sm text-warm-accent capitalize">{item.detectedName}</div>
+                  <div className="font-sans text-[11px] text-warm-accent/70 mt-0.5">{item.scaledIngredient}</div>
                 </div>
               ))}
             </div>
@@ -186,11 +209,6 @@ export function FridgeRecipeDetailPage() {
             </div>
           </div>
         )}
-
-        {/* Pantry note */}
-        <p className="font-sans text-warm-muted text-xs italic">
-          Salt, pepper &amp; spices assumed in pantry
-        </p>
 
         {/* Add to grocery list */}
         <button

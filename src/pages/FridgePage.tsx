@@ -10,6 +10,7 @@ import { GeminiKeyBanner } from '../components/auth/GeminiKeyBanner'
 import { FridgeRecipeCard } from '../components/fridge/FridgeRecipeCard'
 import { AISuggestionCard } from '../components/fridge/AISuggestionCard'
 import { useToast } from '../contexts/ToastContext'
+import { HOUSEHOLD_PANTRY } from '../constants/pantry'
 
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -155,17 +156,29 @@ export function FridgePage() {
         <>
           {/* Detected ingredient chips */}
           {detected.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {detected.map(chip => (
-                <button
-                  key={chip}
-                  onClick={() => removeChip(chip)}
-                  className="flex items-center gap-1 bg-warm-accent/10 text-warm-accent border border-warm-accent/30 rounded-full px-3 py-1 font-sans text-sm cursor-pointer touch-manipulation active:opacity-70"
-                >
-                  {chip}
-                  <span className="text-warm-accent/60 text-xs leading-none">×</span>
-                </button>
-              ))}
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-wrap gap-2">
+                {detected.map(chip => (
+                  <button
+                    key={chip}
+                    onClick={() => removeChip(chip)}
+                    className="flex items-center gap-1 bg-warm-accent/10 text-warm-accent border border-warm-accent/30 rounded-full px-3 py-1 font-sans text-sm cursor-pointer touch-manipulation active:opacity-70"
+                  >
+                    {chip}
+                    <span className="text-warm-accent/60 text-xs leading-none">×</span>
+                  </button>
+                ))}
+              </div>
+              <div>
+                <p className="font-sans text-[10px] uppercase tracking-wider text-warm-muted font-bold mb-1.5 px-1">📦 Pantry — always available</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {HOUSEHOLD_PANTRY.map(item => (
+                    <span key={item} className="bg-warm-surface border border-warm-border rounded-full px-2.5 py-1 font-sans text-xs text-warm-secondary">
+                      {item}
+                    </span>
+                  ))}
+                </div>
+              </div>
             </div>
           )}
 

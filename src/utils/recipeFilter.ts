@@ -1,5 +1,6 @@
 import type { Recipe } from '../types/app'
 import { scaleIngredients } from './servingScaler'
+import { HOUSEHOLD_PANTRY } from '../constants/pantry'
 
 export interface RecipeFilters {
   search?: string
@@ -81,9 +82,10 @@ export function filterByFridge(
   threshold = 0.35
 ): FridgeRecipe[] {
   if (!detected.length) return []
+  const allAvailable = [...detected, ...HOUSEHOLD_PANTRY]
   return recipes
     .map(r => {
-      const { score, matched, total } = scoreFridgeMatch(r, detected)
+      const { score, matched, total } = scoreFridgeMatch(r, allAvailable)
       return { ...r, fridgeScore: score, fridgeMatched: matched, fridgeTotal: total }
     })
     .filter(r => r.fridgeScore >= threshold)

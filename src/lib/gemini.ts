@@ -244,34 +244,40 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`
   return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
 
-const FRIDGE_SLOT_STYLE = ['quick weeknight', 'hearty or creative'] as const
+const FRIDGE_VARIATIONS = [
+  'Mediterranean-style', 'Asian-inspired', 'quick weeknight',
+  'hearty comfort food', 'Italian-inspired', 'Middle Eastern',
+  'light and fresh', 'rustic one-pot', 'oven-baked', 'stir-fry',
+]
 
 export async function generateFridgeRecipe(
   detected: string[],
-  slotIndex: number,
+  _slotIndex: number,
   apiKey: string
 ): Promise<GeneratedRecipe> {
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
-  const style = FRIDGE_SLOT_STYLE[slotIndex % 2]
+  const style = FRIDGE_VARIATIONS[Math.floor(Math.random() * FRIDGE_VARIATIONS.length)]
 
-  const prompt = `You are a helpful cooking assistant. The user has these ingredients in their fridge:
+  const prompt = `You are a helpful cooking assistant for a European household. The user has these FRIDGE ingredients:
 ${detected.join(', ')}
 
-Suggest a ${style} recipe that uses as many of these ingredients as possible. Respond ONLY with valid JSON matching this exact schema:
+The following pantry staples are ALWAYS available and do not need to be bought: rice, pasta, spaghetti, potatoes, carrots, onions, garlic, bread, flour, butter, olive oil, eggs, oats, lentils, canned tomatoes, salt, pepper, sugar, and common spices.
+
+Suggest a ${style} recipe using the fridge ingredients as the focus, supplemented by pantry staples. Respond ONLY with valid JSON matching this exact schema:
 {
   "title": "Recipe name",
   "prep_time_mins": 10,
   "cook_time_mins": 25,
   "servings": 2,
-  "ingredients": "2 chicken breasts\\n4 cloves garlic, minced\\n1 tbsp olive oil",
-  "instructions": ["Season chicken with salt and pepper.", "Heat oil in pan over medium heat.", "Cook chicken 6 min per side until golden."]
+  "ingredients": "2 chicken breasts\\n200g pasta\\n4 cloves garlic, minced",
+  "instructions": ["Season chicken with salt and pepper.", "Boil pasta in salted water for 10 minutes.", "Cook chicken 6 min per side."]
 }
 
 Rules:
+- Use metric units only: grams (g), kilograms (kg), millilitres (ml), litres (l), Celsius (°C) — no cups, oz, lbs, or °F
 - ingredients: one ingredient with quantity per line, joined with \\n
-- instructions: array of plain step strings, no numbering (numbers added automatically)
-- Use ONLY the provided ingredients plus salt, pepper, and basic pantry staples
+- instructions: array of plain step strings, no numbering
 - Return ONLY the JSON object, no explanation, no markdown`
 
   const result = await model.generateContent(prompt)
