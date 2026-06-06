@@ -4,11 +4,26 @@ export function scaleIngredients(text: string, multiplier: number): string {
 }
 
 function scaleLine(line: string, multiplier: number): string {
-  // Handle fractions first (e.g. 1/2); if matched, skip integer/decimal pass
+  // Handle fractions first (e.g. 1/2); if matched, skip remaining passes
   const fractionResult = line.replace(/\b(\d+)\/(\d+)\b/, (_m, n, d) =>
     formatNumber((parseInt(n) / parseInt(d)) * multiplier)
   )
   if (fractionResult !== line) return fractionResult
+
+  // Handle ranges (e.g. 200-300ml, 1-2 tbsp) — scale both ends
+  const rangeResult = line.replace(
+    /\b(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)([a-zA-Z]*)(\s+[a-zA-Z]+)?/,
+    (_m, n1, n2, unit, wordPart) => {
+      const scaled1 = formatNumber(parseFloat(n1) * multiplier)
+      const scaled2 = formatNumber(parseFloat(n2) * multiplier)
+      if (!wordPart) return `${scaled1}-${scaled2}${unit}`
+      const word = wordPart.trimStart()
+      const space = wordPart.match(/^\s+/)?.[0] ?? ' '
+      const adjustedWord = adjustPlurality(word, parseFloat(n2), parseFloat(n2) * multiplier)
+      return `${scaled1}-${scaled2}${unit}${space}${adjustedWord}`
+    }
+  )
+  if (rangeResult !== line) return rangeResult
 
   // Handle integers and decimals, optionally followed directly by a unit suffix
   // (e.g. 1L, 500g, 400ml) or a space-separated word. Adjust plurality of the
