@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { Heart, Utensils, User } from 'lucide-react'
+import { Heart, Utensils } from 'lucide-react'
 import { useToggleFavourite } from '../../hooks/useRecipes'
 import type { Recipe } from '../../types/app'
 
@@ -27,19 +27,17 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
         </div>
         <div className="p-3">
           <h3 className="font-sans font-semibold text-warm-primary text-sm leading-snug line-clamp-2">{recipe.title}</h3>
-          <div className="flex items-center gap-1.5 mt-1 overflow-hidden">
-            {totalMins > 0 && <span className="font-sans text-warm-secondary text-xs">{totalMins} min</span>}
-            {totalMins > 0 && (recipe.rating || recipe.servings) && <span className="text-warm-border text-xs">·</span>}
-            {recipe.rating ? <span className="font-sans text-warm-secondary text-xs">{'★'.repeat(Math.min(3, recipe.rating))}</span> : null}
-            {recipe.rating && recipe.servings ? <span className="text-warm-border text-xs">·</span> : null}
-            {recipe.servings ? (
-              <span className="flex items-center gap-0.5 flex-shrink-0">
-                {Array.from({ length: Math.min(4, recipe.servings) }).map((_, i) => (
-                  <User key={i} className="w-2.5 h-2.5 text-warm-secondary" aria-hidden="true" />
-                ))}
-                {recipe.servings >= 5 && <span className="font-sans text-warm-secondary text-[10px] leading-none">+</span>}
+          <div className="font-sans text-warm-secondary text-xs mt-1 whitespace-nowrap overflow-hidden">
+            {[
+              totalMins > 0 ? `${totalMins} min` : null,
+              recipe.rating ? '★'.repeat(Math.min(5, Math.max(0, Math.floor(recipe.rating)))) : null,
+              recipe.servings ? `${recipe.servings} serv` : null,
+            ].filter(Boolean).map((item, i) => (
+              <span key={i}>
+                {i > 0 && <span className="mx-1 text-sm text-warm-muted select-none">·</span>}
+                {item}
               </span>
-            ) : null}
+            ))}
           </div>
           {matchedIngredients.length > 0 && (
             <ul className="mt-1.5 flex flex-col gap-0.5" aria-label="Matched ingredients">
