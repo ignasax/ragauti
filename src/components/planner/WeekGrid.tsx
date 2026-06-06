@@ -30,7 +30,7 @@ export function WeekGrid({ windowStart }: WeekGridProps) {
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider text-center">Dinner</span>
       </div>
       {days.map(({ label, date, isToday }) => (
-        <div key={date} className={`grid grid-cols-[68px_1fr_1fr] gap-2 items-start rounded-xl px-1 ${isToday ? 'bg-warm-accent/8' : ''}`}>
+        <div key={date} className={`grid grid-cols-[68px_1fr_1fr] gap-2 items-start rounded-xl px-1 ${isToday ? 'bg-warm-accent/12' : ''}`}>
           <div className="min-h-[80px] flex items-center">
             <span className={`font-sans text-sm font-semibold ${isToday ? 'text-warm-accent' : 'text-warm-primary'}`}>
               {label}

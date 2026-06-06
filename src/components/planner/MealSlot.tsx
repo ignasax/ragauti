@@ -35,15 +35,15 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
           </button>
           <Link
             to={`/recipes/${slot.recipe.id}`}
-            className="flex items-center gap-2 p-2 pr-7 min-h-[80px] active:opacity-70 transition-opacity"
+            className="flex items-stretch min-h-[80px] active:opacity-70 transition-opacity"
           >
-            <div className="w-8 h-8 rounded-md bg-warm-border overflow-hidden flex-shrink-0">
+            <div className="w-14 flex-shrink-0 bg-warm-border">
               {slot.recipe.image_url
                 ? <img src={slot.recipe.image_url} alt="" className="w-full h-full object-cover" loading="lazy" />
-                : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-3.5 h-3.5 text-warm-muted" /></div>
+                : <div className="w-full h-full flex items-center justify-center"><Utensils className="w-4 h-4 text-warm-muted" /></div>
               }
             </div>
-            <span className="font-sans text-[13px] font-semibold text-warm-primary line-clamp-3 flex-1 leading-snug">{slot.recipe.title}</span>
+            <span className="font-sans text-sm font-semibold text-warm-primary line-clamp-2 flex-1 leading-snug self-center p-2 pr-7">{slot.recipe.title}</span>
           </Link>
         </div>
         {picking && <RecipePicker onSelect={handleSelect} onClose={() => setPicking(false)} />}
