@@ -120,3 +120,52 @@ ${text}`,
   const data = await res.json()
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
 }
+
+export async function detectFridgeIngredientsWithGroq(
+  base64: string,
+  mimeType: string,
+  key: string
+): Promise<string[]> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [{
+        role: 'user',
+        content: [
+          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+          {
+            type: 'text',
+            text: `Look at this photo and identify the food ingredients you can see.
+
+Return ONLY a valid JSON array of ingredient name strings. Rules:
+- Include only meaningful food ingredients (vegetables, meat, dairy, fruit, condiments, etc.)
+- Do NOT include: salt, pepper, oil, sugar, flour, water, spices, or pantry staples
+- Do NOT include quantities, amounts, fat percentages, or units — just the name
+- Use simple names: "chicken" not "chicken breast fillet", "cream" not "35% cream"
+- Return ONLY the JSON array, no explanation, no markdown
+
+Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`,
+          },
+        ],
+      }],
+      temperature: 0.1,
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(
+      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
+    )
+  }
+
+  const data = await res.json()
+  const content = (data.choices?.[0]?.message?.content ?? '') as string
+  const match = content.match(/\[[\s\S]*\]/)
+  if (!match) throw new Error('No ingredient list in Groq response')
+  const parsed = JSON.parse(match[0])
+  if (!Array.isArray(parsed)) throw new Error('Expected array from Groq')
+  return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}

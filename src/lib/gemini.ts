@@ -173,3 +173,33 @@ export function sanitizeExtracted(raw: unknown): ExtractedRecipe {
   }
   return result
 }
+
+export async function detectFridgeIngredients(
+  base64: string,
+  mimeType: string,
+  key: string
+): Promise<string[]> {
+  const genAI = new GoogleGenerativeAI(key)
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+  const prompt = `Look at this photo and identify the food ingredients you can see.
+
+Return ONLY a valid JSON array of ingredient name strings. Rules:
+- Include only meaningful food ingredients (vegetables, meat, dairy, fruit, condiments, etc.)
+- Do NOT include: salt, pepper, oil, sugar, flour, water, spices, or pantry staples
+- Do NOT include quantities, amounts, fat percentages, or units — just the name
+- Use simple names: "chicken" not "chicken breast fillet", "cream" not "35% cream"
+- Return ONLY the JSON array, no explanation, no markdown
+
+Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`
+
+  const result = await model.generateContent([
+    { inlineData: { mimeType, data: base64 } },
+    { text: prompt },
+  ])
+  const response = result.response.text()
+  const match = response.match(/\[[\s\S]*\]/)
+  if (!match) throw new Error('No ingredient list in Gemini response')
+  const parsed = JSON.parse(match[0])
+  if (!Array.isArray(parsed)) throw new Error('Expected array from Gemini')
+  return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
