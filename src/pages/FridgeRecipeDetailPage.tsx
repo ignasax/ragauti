@@ -113,7 +113,7 @@ export function FridgeRecipeDetailPage() {
         {/* Title + meta */}
         <div>
           <h1 className="font-serif text-2xl font-bold text-warm-primary mb-1">{recipe.title}</h1>
-          <div className="flex items-center flex-nowrap font-sans text-warm-secondary text-sm mb-2 overflow-hidden">
+          <div className="font-sans text-warm-secondary text-sm mb-2 whitespace-nowrap overflow-hidden">
             {[
               (recipe.prep_time_mins || recipe.cook_time_mins)
                 ? `${(recipe.prep_time_mins ?? 0) + (recipe.cook_time_mins ?? 0)} min`
@@ -123,8 +123,8 @@ export function FridgeRecipeDetailPage() {
                 : null,
               recipe.servings ? `${recipe.servings} servings` : null,
             ].filter(Boolean).map((item, i) => (
-              <span key={i} className="flex items-center whitespace-nowrap">
-                {i > 0 && <span className="mx-2 text-lg leading-none text-warm-muted select-none">·</span>}
+              <span key={i}>
+                {i > 0 && <span className="mx-2 text-lg text-warm-muted select-none">·</span>}
                 {item}
               </span>
             ))}

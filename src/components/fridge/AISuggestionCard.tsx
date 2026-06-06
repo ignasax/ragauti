@@ -131,13 +131,13 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
       <div className="flex items-start justify-between px-4 pt-4 pb-3">
         <div className="flex-1 min-w-0 pr-2">
           <h3 className="font-serif text-xl font-bold text-warm-primary leading-tight">{r.title}</h3>
-          <div className="flex items-center flex-nowrap font-sans text-warm-secondary text-sm mt-1 overflow-hidden">
+          <div className="font-sans text-warm-secondary text-sm mt-1 whitespace-nowrap overflow-hidden">
             {[
               totalTime > 0 ? `${totalTime} min` : null,
               `${Math.round(r.servings * multiplier)} servings`,
             ].filter(Boolean).map((item, i) => (
-              <span key={i} className="flex items-center whitespace-nowrap">
-                {i > 0 && <span className="mx-2 text-lg leading-none text-warm-muted select-none">·</span>}
+              <span key={i}>
+                {i > 0 && <span className="mx-2 text-lg text-warm-muted select-none">·</span>}
                 {item}
               </span>
             ))}
