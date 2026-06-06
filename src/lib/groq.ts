@@ -1,4 +1,4 @@
-import { extractFromJsonLd, sanitizeExtracted, type ExtractedRecipe } from './gemini'
+import { extractFromJsonLd, sanitizeExtracted, parseGeneratedRecipe, type ExtractedRecipe, type GeneratedRecipe } from './gemini'
 
 const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
@@ -173,4 +173,57 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`,
   }
   if (!Array.isArray(parsed)) throw new Error('Expected array from Groq')
   return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
+export async function generateFridgeRecipeWithGroq(
+  detected: string[],
+  slotIndex: number,
+  apiKey: string
+): Promise<GeneratedRecipe> {
+  const style = slotIndex % 2 === 0 ? 'quick weeknight' : 'hearty or creative'
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are a helpful cooking assistant. Respond with a single valid JSON object and nothing else — no markdown, no explanation, no code fences.',
+        },
+        {
+          role: 'user',
+          content: `The user has these ingredients in their fridge:
+${detected.join(', ')}
+
+Suggest a ${style} recipe that uses as many of these ingredients as possible. Respond ONLY with valid JSON matching this exact schema:
+{
+  "title": "Recipe name",
+  "prep_time_mins": 10,
+  "cook_time_mins": 25,
+  "servings": 2,
+  "ingredients": "2 chicken breasts\\n4 cloves garlic, minced\\n1 tbsp olive oil",
+  "instructions": ["Season chicken with salt and pepper.", "Heat oil in pan over medium heat.", "Cook chicken 6 min per side until golden."]
+}
+
+Rules:
+- ingredients: one ingredient with quantity per line, joined with \\n
+- instructions: array of plain step strings, no numbering
+- Use ONLY the provided ingredients plus salt, pepper, and basic pantry staples`,
+        },
+      ],
+      temperature: 0.7,
+      response_format: { type: 'json_object' },
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(
+      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
+    )
+  }
+
+  const data = await res.json()
+  return parseGeneratedRecipe((data.choices?.[0]?.message?.content ?? '') as string)
 }
