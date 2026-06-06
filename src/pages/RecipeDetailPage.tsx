@@ -4,6 +4,10 @@ import { ChevronLeft, Pencil, Trash2, Heart, User } from 'lucide-react'
 import { useRecipe } from '../hooks/useRecipe'
 import { useDeleteRecipe, useToggleFavourite } from '../hooks/useRecipes'
 import { ServingScaler } from '../components/recipes/ServingScaler'
+import { useAddRecipeToGrocery } from '../hooks/useGroceryList'
+import { getLocalDateStr } from '../hooks/useMealPlan'
+import { scaleIngredients } from '../utils/servingScaler'
+import { useToast } from '../contexts/ToastContext'
 
 export function RecipeDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -13,6 +17,9 @@ export function RecipeDetailPage() {
   const { mutate: toggleFav } = useToggleFavourite()
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [section, setSection] = useState<'ingredients' | 'instructions' | 'notes'>('ingredients')
+  const [servingMultiplier, setServingMultiplier] = useState(1)
+  const { mutate: addToGrocery, isPending: isAddingToGrocery } = useAddRecipeToGrocery()
+  const { showToast } = useToast()
 
   useEffect(() => {
     if (confirmDelete) {
@@ -101,7 +108,37 @@ export function RecipeDetailPage() {
         ))}
       </div>
       <div className="px-4 pt-4 pb-8">
-        {section === 'ingredients' && <ServingScaler ingredients={recipe.ingredients} baseServings={recipe.servings} />}
+        {section === 'ingredients' && (
+          <div className="flex flex-col gap-4">
+            <ServingScaler
+              ingredients={recipe.ingredients}
+              baseServings={recipe.servings}
+              onScaleChange={(multiplier) => setServingMultiplier(multiplier)}
+            />
+            <button
+              onClick={() => {
+                const weekStart = getLocalDateStr(0)
+                const scaled = scaleIngredients(recipe.ingredients, servingMultiplier)
+                const lines = scaled.split('\n').filter(l => l.trim())
+                addToGrocery(
+                  {
+                    weekStart,
+                    recipeId: recipe.id,
+                    items: lines.map(text => ({ text: text.trim(), is_checked: false })),
+                  },
+                  { onSuccess: () => showToast('Added to grocery list') }
+                )
+              }}
+              disabled={isAddingToGrocery}
+              className="w-full bg-warm-accent text-white font-sans font-semibold text-sm py-3 rounded-xl min-h-[44px] active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation flex items-center justify-center gap-2"
+            >
+              🛒 Add to grocery list
+            </button>
+            <p className="font-sans text-warm-muted text-xs text-center -mt-2">
+              All ingredients · {Math.round((recipe.servings ?? 1) * servingMultiplier) || (recipe.servings ?? 1)} servings · added to this week's list
+            </p>
+          </div>
+        )}
         {section === 'instructions' && <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">{recipe.instructions}</div>}
         {section === 'notes' && (
           <div className="flex flex-col gap-4">
