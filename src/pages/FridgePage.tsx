@@ -184,21 +184,23 @@ export function FridgePage() {
           )}
 
           {/* AI suggestions */}
-          <div className="flex flex-col gap-3 pb-8">
-            <div className="font-sans font-bold text-[10px] uppercase tracking-wider text-warm-secondary px-1">
-              AI Suggestions
+          {detected.length > 0 && (
+            <div className="flex flex-col gap-3 pb-8">
+              <div className="font-sans font-bold text-[10px] uppercase tracking-wider text-warm-secondary px-1">
+                AI Suggestions
+              </div>
+              {[0, 1].map(slotIndex => (
+                <AISuggestionCard
+                  key={slotIndex}
+                  slotIndex={slotIndex}
+                  detected={detected}
+                  provider={provider}
+                  geminiKey={geminiKey}
+                  groqKey={groqKey}
+                />
+              ))}
             </div>
-            {[0, 1].map(slotIndex => (
-              <AISuggestionCard
-                key={slotIndex}
-                slotIndex={slotIndex}
-                detected={detected}
-                provider={provider}
-                geminiKey={geminiKey}
-                groqKey={groqKey}
-              />
-            ))}
-          </div>
+          )}
         </>
       )}
     </div>
