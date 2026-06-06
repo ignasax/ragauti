@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { filterRecipes } from './recipeFilter'
+import { filterRecipes, stripQuantity, scoreFridgeMatch, filterByFridge } from './recipeFilter'
 import type { Recipe } from '../types/app'
 
 const base: Recipe = {
@@ -44,5 +44,72 @@ describe('filterRecipes', () => {
     expect(filterRecipes([base, r2], { search: 'soup', rating: 3 })).toHaveLength(1)
     expect(filterRecipes([base, r2], { ingredientTerms: ['garlic'], rating: 4 })).toHaveLength(1)
     expect(filterRecipes([base, r2], { ingredientTerms: ['garlic'], rating: 3 })).toHaveLength(0)
+  })
+})
+
+describe('stripQuantity', () => {
+  it('strips grams prefix', () => expect(stripQuantity('500g chicken breast')).toBe('chicken breast'))
+  it('strips ml prefix', () => expect(stripQuantity('200ml chicken stock')).toBe('chicken stock'))
+  it('strips percentage', () => expect(stripQuantity('35% thick cream')).toBe('thick cream'))
+  it('strips "juice of N"', () => expect(stripQuantity('juice of 1 lemon')).toBe('lemon'))
+  it('strips tbsp', () => expect(stripQuantity('3 tbsp butter')).toBe('butter'))
+  it('strips cloves unit', () => expect(stripQuantity('4 cloves garlic')).toBe('garlic'))
+  it('strips plain leading number', () => expect(stripQuantity('2 eggs')).toBe('eggs'))
+  it('leaves plain text unchanged', () => expect(stripQuantity('chicken')).toBe('chicken'))
+  it('lowercases result', () => expect(stripQuantity('Chicken Breast')).toBe('chicken breast'))
+})
+
+describe('scoreFridgeMatch', () => {
+  const recipe: Recipe = {
+    ...base,
+    ingredients: '500g chicken\n4 cloves garlic\njuice of 1 lemon\nsalt\npepper',
+  }
+
+  it('matches all meaningful ingredients, skips salt and pepper', () => {
+    const r = scoreFridgeMatch(recipe, ['chicken', 'garlic', 'lemon'])
+    expect(r.matched).toBe(3)
+    expect(r.total).toBe(3)
+    expect(r.score).toBeCloseTo(1.0)
+  })
+
+  it('partial match returns correct ratio', () => {
+    const r = scoreFridgeMatch(recipe, ['chicken'])
+    expect(r.matched).toBe(1)
+    expect(r.total).toBe(3)
+    expect(r.score).toBeCloseTo(0.333, 2)
+  })
+
+  it('returns zero score for empty detected list', () => {
+    expect(scoreFridgeMatch(recipe, []).score).toBe(0)
+  })
+
+  it('returns zero score for no meaningful ingredients', () => {
+    const r = scoreFridgeMatch({ ...base, ingredients: 'salt\npepper' }, ['chicken'])
+    expect(r.score).toBe(0)
+    expect(r.total).toBe(0)
+  })
+})
+
+describe('filterByFridge', () => {
+  const chicken: Recipe = { ...base, id: '1', ingredients: 'chicken\ngarlic\nlemon\nsalt' }
+  const pasta: Recipe = { ...base, id: '2', title: 'Pasta', ingredients: 'pasta\nonion\ntomato\nsalt' }
+
+  it('returns recipes above threshold, sorted by score descending', () => {
+    const result = filterByFridge([chicken, pasta], ['chicken', 'garlic', 'lemon'])
+    expect(result[0].id).toBe('1')
+    expect(result[0].fridgeScore).toBeCloseTo(1.0)
+    expect(result[0].fridgeMatched).toBe(3)
+    expect(result[0].fridgeTotal).toBe(3)
+  })
+
+  it('filters out recipes below threshold', () => {
+    // pasta has no matching ingredients → score 0, filtered out
+    const result = filterByFridge([chicken, pasta], ['chicken'], 0.35)
+    expect(result).toHaveLength(1)
+    expect(result[0].id).toBe('1')
+  })
+
+  it('returns empty array when detected list is empty', () => {
+    expect(filterByFridge([chicken, pasta], [])).toHaveLength(0)
   })
 })
