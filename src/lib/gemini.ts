@@ -199,7 +199,12 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`
   const response = result.response.text()
   const match = response.match(/\[[\s\S]*\]/)
   if (!match) throw new Error('No ingredient list in Gemini response')
-  const parsed = JSON.parse(match[0])
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(match[0])
+  } catch {
+    throw new Error('Malformed JSON in Gemini response')
+  }
   if (!Array.isArray(parsed)) throw new Error('Expected array from Gemini')
   return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }

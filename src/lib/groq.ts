@@ -165,7 +165,12 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`,
   const content = (data.choices?.[0]?.message?.content ?? '') as string
   const match = content.match(/\[[\s\S]*\]/)
   if (!match) throw new Error('No ingredient list in Groq response')
-  const parsed = JSON.parse(match[0])
+  let parsed: unknown
+  try {
+    parsed = JSON.parse(match[0])
+  } catch {
+    throw new Error('Malformed JSON in Groq response')
+  }
   if (!Array.isArray(parsed)) throw new Error('Expected array from Groq')
   return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
 }
