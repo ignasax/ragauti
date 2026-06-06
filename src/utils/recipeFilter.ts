@@ -37,14 +37,17 @@ export const PANTRY_STAPLES = new Set([
 export function stripQuantity(line: string): string {
   let s = line.trim()
   s = s.replace(/^(juice|zest)\s+of\s+\d*\.?\d*\s*/i, '')
-  s = s.replace(/^\d+(\.\d+)?(\s*\/\s*\d+)?\s*(g|kg|ml|l|oz|lb|tbsps?|tsps?|cups?|cloves?|pinch(es)?|bunch(es)?|handful|pieces?|slices?|sprigs?|sticks?|heads?|stalks?)\s*/i, '')
+  s = s.replace(/^\d+(\.\d+)?(\s*\/\s*\d+)?\s*(g|kg|ml|l|oz|lb|tbsps?|tsps?|cups?|cloves?|pinch(es)?|bunch(es)?|handful|pieces?|slices?|sprigs?|sticks?|heads?|stalks?)(?![a-zA-Z])\s*/i, '')
   s = s.replace(/^\d+(\.\d+)?%\s*/i, '')
   s = s.replace(/^\d+(\.\d+)?\s+/i, '')
   return s.toLowerCase().trim()
 }
 
 function isStaple(stripped: string): boolean {
-  return Array.from(PANTRY_STAPLES).some(s => stripped.includes(s))
+  return Array.from(PANTRY_STAPLES).some(s => {
+    const pattern = new RegExp('(?:^|\\s)' + s.replace(/\s+/g, '\\s+') + '(?:\\s|$)')
+    return pattern.test(stripped)
+  })
 }
 
 export function scoreFridgeMatch(
@@ -77,9 +80,8 @@ export function filterByFridge(
   if (!detected.length) return []
   return recipes
     .map(r => {
-      const { matched, total } = scoreFridgeMatch(r, detected)
-      const fridgeScore = matched / detected.length
-      return { ...r, fridgeScore, fridgeMatched: matched, fridgeTotal: total }
+      const { score, matched, total } = scoreFridgeMatch(r, detected)
+      return { ...r, fridgeScore: score, fridgeMatched: matched, fridgeTotal: total }
     })
     .filter(r => r.fridgeScore >= threshold)
     .sort((a, b) => b.fridgeScore - a.fridgeScore)

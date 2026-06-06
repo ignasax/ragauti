@@ -104,7 +104,7 @@ describe('filterByFridge', () => {
 
   it('filters out recipes below threshold', () => {
     // pasta has no matching ingredients → score 0, filtered out
-    const result = filterByFridge([chicken, pasta], ['chicken'], 0.35)
+    const result = filterByFridge([chicken, pasta], ['chicken'], 0.30)
     expect(result).toHaveLength(1)
     expect(result[0].id).toBe('1')
   })
