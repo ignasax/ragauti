@@ -75,8 +75,8 @@ export function LoginPage() {
             Continue with Google
           </button>
           <p className="font-sans text-warm-muted text-xs text-center">
-            Free to use. AI features require your own API key —{' '}
-            <span className="text-warm-secondary">add it in Settings after signing in.</span>
+            Free to use. AI features use your own Gemini or Groq API key —{' '}
+            <span className="text-warm-secondary">both have a free tier, no credit card needed. Add it in Settings after signing in.</span>
           </p>
         </div>
 

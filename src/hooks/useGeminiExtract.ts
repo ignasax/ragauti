@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { extractRecipe, type ExtractedRecipe } from '../lib/gemini'
-import { extractRecipeWithGroq } from '../lib/groq'
+import { extractRecipe, extractRecipeFromImage, type ExtractedRecipe } from '../lib/gemini'
+import { extractRecipeWithGroq, extractRecipeFromImageWithGroq } from '../lib/groq'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
 import { supabase } from '../lib/supabase'
 
@@ -9,6 +9,23 @@ interface ExtractionState {
   extracted: ExtractedRecipe | null
   error: string | null
   missingFields: string[]
+}
+
+function computeMissingFields(data: ExtractedRecipe): string[] {
+  const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
+  return [
+    ...required.filter(k => !data[k]),
+    ...((!data.servings || data.servings === 0) ? ['servings'] : []),
+  ]
+}
+
+function fileToBase64(file: File): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => resolve((reader.result as string).split(',')[1])
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
 }
 
 export function useGeminiExtract() {
@@ -35,16 +52,25 @@ export function useGeminiExtract() {
       const data = provider === 'groq'
         ? await extractRecipeWithGroq(html, activeKey)
         : await extractRecipe(html, activeKey)
-      const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
-      const missingFields = [
-        ...required.filter(k => !data[k]),
-        ...((!data.servings || data.servings === 0) ? ['servings'] : []),
-      ]
-      setState({ isExtracting: false, extracted: data, error: null, missingFields })
+      setState({ isExtracting: false, extracted: data, error: null, missingFields: computeMissingFields(data) })
     } catch (err) {
       setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })
     }
   }
 
-  return { ...state, extract, activeKey }
+  const extractFromImage = async (file: File) => {
+    if (!activeKey) return
+    setState({ isExtracting: true, extracted: null, error: null, missingFields: [] })
+    try {
+      const base64 = await fileToBase64(file)
+      const data = provider === 'groq'
+        ? await extractRecipeFromImageWithGroq(base64, file.type, activeKey)
+        : await extractRecipeFromImage(base64, file.type, activeKey)
+      setState({ isExtracting: false, extracted: data, error: null, missingFields: computeMissingFields(data) })
+    } catch (err) {
+      setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })
+    }
+  }
+
+  return { ...state, extract, extractFromImage, activeKey }
 }

@@ -59,7 +59,7 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
     if (!data.title.trim()) { setError('Title is required'); return }
     setError(null)
 
-    let finalData = { ...data }
+    const finalData = { ...data }
 
     if (imageFile) {
       setIsUploading(true)

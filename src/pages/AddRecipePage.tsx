@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
-import { ChevronLeft, Sparkles } from 'lucide-react'
+import { Camera, ChevronLeft, Sparkles } from 'lucide-react'
 import { RecipeForm } from '../components/recipes/RecipeForm'
 import { GeminiKeyBanner } from '../components/auth/GeminiKeyBanner'
 import { useAddRecipe } from '../hooks/useRecipes'
@@ -12,10 +12,11 @@ export function AddRecipePage() {
   const location = useLocation()
   const { mutateAsync, isPending } = useAddRecipe()
   const { geminiKey, groqKey, provider } = useGeminiKey()
-  const { extract, isExtracting, extracted, error, missingFields } = useGeminiExtract()
+  const { extract, extractFromImage, isExtracting, extracted, error, missingFields } = useGeminiExtract()
   const hasActiveKey = provider === 'groq' ? !!groqKey : !!geminiKey
   const [urlInput, setUrlInput] = useState('')
   const [formKey, setFormKey] = useState(0)
+  const cameraInputRef = useRef<HTMLInputElement>(null)
 
   // Read shared URL from ShareTargetPage redirect
   const sharedUrl = (location.state as { sharedUrl?: string } | null)?.sharedUrl
@@ -44,11 +45,20 @@ export function AddRecipePage() {
           aria-label="Recipe URL"
           className="flex-1 bg-warm-surface border border-warm-border rounded-lg px-3 py-3 text-warm-primary font-sans text-base placeholder:text-warm-muted focus:outline-none focus:border-warm-accent transition-colors min-h-[44px]" />
         {hasActiveKey ? (
-          <button type="button" onClick={() => handleExtract(urlInput)} disabled={!urlInput || isExtracting}
-            className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] flex items-center gap-1.5 active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
-            <Sparkles className="w-4 h-4" aria-hidden="true" />
-            {isExtracting ? 'Extracting…' : 'Extract'}
-          </button>
+          <>
+            <button type="button" onClick={() => handleExtract(urlInput)} disabled={!urlInput || isExtracting}
+              className="bg-warm-accent text-white font-sans font-semibold text-sm px-3 py-2 rounded-lg min-h-[44px] flex items-center gap-1.5 active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation">
+              <Sparkles className="w-4 h-4" aria-hidden="true" />
+              {isExtracting ? 'Extracting…' : 'Extract'}
+            </button>
+            <button type="button" onClick={() => cameraInputRef.current?.click()} disabled={isExtracting}
+              aria-label="Scan recipe from photo"
+              className="bg-warm-surface border border-warm-border text-warm-secondary px-3 py-2 rounded-lg min-h-[44px] min-w-[44px] flex items-center justify-center active:opacity-70 disabled:opacity-50 cursor-pointer touch-manipulation">
+              <Camera className="w-5 h-5" aria-hidden="true" />
+            </button>
+            <input ref={cameraInputRef} type="file" accept="image/*" capture="environment" className="sr-only"
+              onChange={e => { const f = e.target.files?.[0]; if (f) { extractFromImage(f); e.target.value = '' } }} />
+          </>
         ) : (
           <div className="flex-1"><GeminiKeyBanner /></div>
         )}
