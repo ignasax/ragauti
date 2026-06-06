@@ -8,6 +8,7 @@ import { detectFridgeIngredients } from '../lib/gemini'
 import { detectFridgeIngredientsWithGroq } from '../lib/groq'
 import { GeminiKeyBanner } from '../components/auth/GeminiKeyBanner'
 import { FridgeRecipeCard } from '../components/fridge/FridgeRecipeCard'
+import { AISuggestionCard } from '../components/fridge/AISuggestionCard'
 import { useToast } from '../contexts/ToastContext'
 
 function fileToBase64(file: File): Promise<string> {
@@ -175,12 +176,29 @@ export function FridgePage() {
               <p className="font-sans text-warm-muted text-sm">Try scanning another angle or rescan</p>
             </div>
           ) : (
-            <div className="grid grid-cols-2 gap-3 pb-8">
+            <div className="grid grid-cols-2 gap-3">
               {fridgeRecipes.map(r => (
                 <FridgeRecipeCard key={r.id} recipe={r} />
               ))}
             </div>
           )}
+
+          {/* AI suggestions */}
+          <div className="flex flex-col gap-3 pb-8">
+            <div className="font-sans font-bold text-[10px] uppercase tracking-wider text-warm-secondary px-1">
+              AI Suggestions
+            </div>
+            {[0, 1].map(slotIndex => (
+              <AISuggestionCard
+                key={slotIndex}
+                slotIndex={slotIndex}
+                detected={detected}
+                provider={provider}
+                geminiKey={geminiKey}
+                groqKey={groqKey}
+              />
+            ))}
+          </div>
         </>
       )}
     </div>
