@@ -5,9 +5,10 @@ interface ServingScalerProps {
   ingredients: string
   baseServings: number | null
   onScaleChange?: (multiplier: number, selected: number) => void
+  showIngredients?: boolean
 }
 
-export function ServingScaler({ ingredients, baseServings, onScaleChange }: ServingScalerProps) {
+export function ServingScaler({ ingredients, baseServings, onScaleChange, showIngredients = true }: ServingScalerProps) {
   const base = Math.max(1, baseServings ?? 1)
   const [selected, setSelected] = useState(base)
 
@@ -41,9 +42,11 @@ export function ServingScaler({ ingredients, baseServings, onScaleChange }: Serv
           className="w-[52px] h-[38px] flex items-center justify-center border-l border-warm-border text-warm-accent text-xl font-bold cursor-pointer touch-manipulation active:bg-warm-surface"
         >+</button>
       </div>
-      <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">
-        {scaleIngredients(ingredients, multiplier)}
-      </div>
+      {showIngredients && (
+        <div className="font-sans text-warm-primary text-[15px] leading-[1.7] whitespace-pre-line">
+          {scaleIngredients(ingredients, multiplier)}
+        </div>
+      )}
     </div>
   )
 }

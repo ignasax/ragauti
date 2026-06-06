@@ -131,10 +131,11 @@ export function FridgeRecipeDetailPage() {
           </div>
         </div>
 
-        {/* Serving scaler */}
+        {/* Serving scaler — no ingredient list; Detected/Still need sections below serve that role */}
         <ServingScaler
           ingredients={recipe.ingredients}
           baseServings={recipe.servings}
+          showIngredients={false}
           onScaleChange={(m) => setMultiplier(m)}
         />
 

@@ -56,12 +56,15 @@ export function scoreFridgeMatch(
 ): { score: number; matched: number; total: number } {
   if (!detected.length) return { score: 0, matched: 0, total: 0 }
   const lines = recipe.ingredients.split('\n').map(l => l.trim()).filter(Boolean)
-  const meaningful = lines.filter(l => !isStaple(stripQuantity(l)))
+  const meaningful = lines.filter(l => {
+    const stripped = stripQuantity(l)
+    return stripped.length > 0 && !isStaple(stripped)
+  })
   if (!meaningful.length) return { score: 0, matched: 0, total: 0 }
   const detectedLower = detected.map(d => d.toLowerCase())
   const matched = meaningful.filter(l => {
     const stripped = stripQuantity(l)
-    return detectedLower.some(d => stripped.includes(d) || d.includes(stripped))
+    return stripped.length > 0 && detectedLower.some(d => stripped.includes(d) || d.includes(stripped))
   }).length
   return { score: matched / meaningful.length, matched, total: meaningful.length }
 }
@@ -106,7 +109,7 @@ export function getFridgeIngredientBreakdown(
 
   lines.forEach((line, i) => {
     const stripped = stripQuantity(line)
-    if (isStaple(stripped)) return
+    if (!stripped || isStaple(stripped)) return
     const scaledIngredient = scaledLines[i] ?? line
     const detectedMatch = detectedLower.find(d => stripped.includes(d) || d.includes(stripped))
     if (detectedMatch) {
