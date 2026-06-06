@@ -10,6 +10,8 @@ import { AddRecipePage } from './pages/AddRecipePage'
 import { EditRecipePage } from './pages/EditRecipePage'
 import { RecipeDetailPage } from './pages/RecipeDetailPage'
 import { ShareTargetPage } from './pages/ShareTargetPage'
+import { FridgePage } from './pages/FridgePage'
+import { FridgeRecipeDetailPage } from './pages/FridgeRecipeDetailPage'
 
 const ProtectedShell = () => (
   <ProtectedRoute>
@@ -27,6 +29,8 @@ export const router = createBrowserRouter([
       { path: '/recipes/:id/edit', element: <EditRecipePage /> },
       { path: '/recipes/:id',      element: <RecipeDetailPage /> },
       { path: '/planner',          element: <PlannerPage /> },
+      { path: '/fridge',                element: <FridgePage /> },
+      { path: '/fridge/recipe/:id',     element: <FridgeRecipeDetailPage /> },
       { path: '/grocery',  element: <GroceryPage /> },
       { path: '/settings', element: <SettingsPage /> },
       { path: '/',         element: <Navigate to="/recipes" replace /> },

@@ -1,11 +1,12 @@
 import { NavLink } from 'react-router-dom'
-import { BookOpen, CalendarDays, ShoppingCart, Settings } from 'lucide-react'
+import { BookOpen, CalendarDays, ShoppingCart, Settings, Snowflake } from 'lucide-react'
 
 const tabs = [
-  { to: '/recipes',  icon: BookOpen,      label: 'Recipes'  },
-  { to: '/planner',  icon: CalendarDays,  label: 'Planner'  },
-  { to: '/grocery',  icon: ShoppingCart,  label: 'Grocery'  },
-  { to: '/settings', icon: Settings,      label: 'Settings' },
+  { to: '/recipes',  icon: BookOpen,    label: 'Recipes'  },
+  { to: '/planner',  icon: CalendarDays, label: 'Planner'  },
+  { to: '/fridge',   icon: Snowflake,   label: 'Fridge'   },
+  { to: '/grocery',  icon: ShoppingCart, label: 'Grocery'  },
+  { to: '/settings', icon: Settings,    label: 'Settings' },
 ]
 
 export function TabBar() {
