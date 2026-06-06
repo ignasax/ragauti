@@ -17,6 +17,41 @@ export interface ExtractedRecipe {
   servings?: number
 }
 
+export interface GeneratedRecipe {
+  title: string
+  prep_time_mins: number | null
+  cook_time_mins: number | null
+  servings: number
+  ingredients: string   // one ingredient per line, e.g. "2 chicken breasts\n4 cloves garlic"
+  instructions: string  // numbered steps joined with \n, e.g. "1. Season chicken.\n2. Heat pan."
+}
+
+export function parseGeneratedRecipe(content: string): GeneratedRecipe {
+  let raw: string
+  try {
+    JSON.parse(content)
+    raw = content
+  } catch {
+    const cleaned = content.replace(/```(?:json)?\s*/gi, '').replace(/```/g, '').trim()
+    const match = cleaned.match(/\{[\s\S]*\}/)
+    if (!match) throw new Error('No JSON in AI response')
+    raw = match[0]
+  }
+  const obj = JSON.parse(raw) as Record<string, unknown>
+  return {
+    title:          typeof obj.title === 'string'          ? obj.title.slice(0, 100) : 'Untitled Recipe',
+    prep_time_mins: typeof obj.prep_time_mins === 'number' ? obj.prep_time_mins       : null,
+    cook_time_mins: typeof obj.cook_time_mins === 'number' ? obj.cook_time_mins       : null,
+    servings:       typeof obj.servings === 'number' && obj.servings > 0 ? obj.servings : 2,
+    ingredients:    typeof obj.ingredients === 'string'    ? obj.ingredients.trim()   : '',
+    instructions:   Array.isArray(obj.instructions)
+      ? (obj.instructions as string[]).map((s, i) => `${i + 1}. ${String(s)}`).join('\n')
+      : typeof obj.instructions === 'string'
+        ? obj.instructions.trim()
+        : '',
+  }
+}
+
 
 function parseDuration(d: unknown): number | undefined {
   if (typeof d !== 'string') return undefined
@@ -207,4 +242,38 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`
   }
   if (!Array.isArray(parsed)) throw new Error('Expected array from Gemini')
   return parsed.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+}
+
+const FRIDGE_SLOT_STYLE = ['quick weeknight', 'hearty or creative'] as const
+
+export async function generateFridgeRecipe(
+  detected: string[],
+  slotIndex: number,
+  apiKey: string
+): Promise<GeneratedRecipe> {
+  const genAI = new GoogleGenerativeAI(apiKey)
+  const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
+  const style = FRIDGE_SLOT_STYLE[slotIndex % 2]
+
+  const prompt = `You are a helpful cooking assistant. The user has these ingredients in their fridge:
+${detected.join(', ')}
+
+Suggest a ${style} recipe that uses as many of these ingredients as possible. Respond ONLY with valid JSON matching this exact schema:
+{
+  "title": "Recipe name",
+  "prep_time_mins": 10,
+  "cook_time_mins": 25,
+  "servings": 2,
+  "ingredients": "2 chicken breasts\\n4 cloves garlic, minced\\n1 tbsp olive oil",
+  "instructions": ["Season chicken with salt and pepper.", "Heat oil in pan over medium heat.", "Cook chicken 6 min per side until golden."]
+}
+
+Rules:
+- ingredients: one ingredient with quantity per line, joined with \\n
+- instructions: array of plain step strings, no numbering (numbers added automatically)
+- Use ONLY the provided ingredients plus salt, pepper, and basic pantry staples
+- Return ONLY the JSON object, no explanation, no markdown`
+
+  const result = await model.generateContent(prompt)
+  return parseGeneratedRecipe(result.response.text())
 }
