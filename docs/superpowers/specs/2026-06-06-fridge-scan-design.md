@@ -72,7 +72,29 @@ Returns ratio plus raw counts so the badge can display "4/5".
 
 ---
 
-## 4. Fridge Page (`src/pages/FridgePage.tsx`)
+## 4. Fridge State — `FridgeContext`
+
+Fridge state lives in a new `src/contexts/FridgeContext.tsx`, provided at app level (same level as `GeminiKeyContext`). This ensures the detected ingredient list survives tab navigation — the user can open a recipe, go back, and their chips are still there.
+
+```ts
+interface FridgeState {
+  status: 'empty' | 'scanning' | 'results' | 'error'
+  detected: string[]   // current chip list — editable by user
+  error: string | null
+}
+```
+
+Actions: `startScan`, `setScanResult(detected)`, `setScanError(msg)`, `updateDetected(detected)`, `reset`.
+
+The photo is never stored — only the string array survives.
+
+---
+
+## 5. Fridge Page (`src/pages/FridgePage.tsx`)
+
+### AI key check
+
+Before opening the camera picker, check `geminiKey` / `groqKey` from `GeminiKeyContext`. If no key is set, render `GeminiKeyBanner` (same pattern as `AddRecipePage`) and do not open the camera.
 
 ### States
 
@@ -94,7 +116,7 @@ Toast with the AI error message. Returns to empty state.
 
 ---
 
-## 5. Fridge Recipe Detail (`src/pages/FridgeRecipeDetailPage.tsx`)
+## 6. Fridge Recipe Detail (`src/pages/FridgeRecipeDetailPage.tsx`)
 
 Opened when user taps a recipe card from the Fridge tab. Navigates to `/fridge/recipe/:id`.
 
@@ -129,15 +151,15 @@ Same two-line structure, greyed out. Quantities are scaled.
 Subtitle: `Detected items added as checked · missing as open · N servings`
 
 **On tap:**
-1. Creates a new grocery list entry for this recipe (same as existing grocery list creation logic)
-2. All ingredients at the scaled quantity
+1. Use `getLocalDateStr(0)` as `week_start` (current week Monday) — no prompt, same as `GroceryPage`
+2. Insert all scaled ingredient lines for this recipe into `grocery_items`
 3. Detected ingredients → `is_checked: true`
 4. Missing ingredients → `is_checked: false`
-5. Navigates to Grocery tab
+5. Show success toast then navigate to Grocery tab
 
 ---
 
-## 6. Grocery List Changes
+## 7. Grocery List Changes
 
 ### `GroceryItem` — editable text
 
@@ -175,9 +197,11 @@ Always rendered at the bottom of the grocery list, **below all recipe groups**. 
 
 **Data:** Items in "Other" are existing manually-added items (`recipe_id === null`). No schema change needed.
 
+`GroceryPage` already conditionally renders an "Other" group at line 120 — the only change is removing the `other.length > 0` condition so it renders permanently.
+
 ---
 
-## 7. Serving Scaler — Unified New Design
+## 8. Serving Scaler — Unified New Design
 
 Replaces the current `ServingScaler` component everywhere it appears.
 
@@ -198,7 +222,7 @@ Applied in:
 
 ---
 
-## 8. Add to Grocery List — RecipeDetailPage
+## 9. Add to Grocery List — RecipeDetailPage
 
 In the **Ingredients** tab of `RecipeDetailPage`, below the ingredient list:
 
@@ -212,14 +236,15 @@ Subtitle: `All ingredients · N servings · new list entry`
 **Logic:**
 1. Take the current serving multiplier from the scaler
 2. Apply `scaleIngredients(recipe.ingredients, multiplier)` to get scaled lines
-3. Create a new grocery list group for this recipe with all scaled ingredient lines, all `is_checked: false`
-4. Show success toast: "Added to grocery list"
+3. Use `getLocalDateStr(0)` (current week Monday) as `week_start` — same as `GroceryPage`, no prompt
+4. Create a new grocery list group for this recipe with all scaled ingredient lines, all `is_checked: false`
+5. Show success toast: "Added to grocery list"
 
 No navigation — user stays on the recipe detail page.
 
 ---
 
-## 9. Routing
+## 10. Routing
 
 New routes added to `App.tsx`:
 
@@ -232,10 +257,11 @@ New routes added to `App.tsx`:
 
 ---
 
-## 10. Files Changed / Created
+## 11. Files Changed / Created
 
 | File | Change |
 |------|--------|
+| `src/contexts/FridgeContext.tsx` | **New** — session-level fridge state |
 | `src/lib/gemini.ts` | Add `detectFridgeIngredients()` |
 | `src/lib/groq.ts` | Add `detectFridgeIngredientsWithGroq()` |
 | `src/utils/recipeFilter.ts` | Add `PANTRY_STAPLES`, `stripQuantity`, `scoreFridgeMatch`, `filterByFridge` |
