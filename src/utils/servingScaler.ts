@@ -10,9 +10,9 @@ function scaleLine(line: string, multiplier: number): string {
   )
   if (fractionResult !== line) return fractionResult
 
-  // Handle ranges (e.g. 200-300ml, 1-2 tbsp) — scale both ends
+  // Handle ranges (e.g. 200-300ml, 1–2 tbsp) — scale both ends; match hyphen, en-dash, em-dash
   const rangeResult = line.replace(
-    /\b(\d+(?:\.\d+)?)\s*-\s*(\d+(?:\.\d+)?)([a-zA-Z]*)(\s+[a-zA-Z]+)?/,
+    /\b(\d+(?:\.\d+)?)\s*[-–—]\s*(\d+(?:\.\d+)?)([a-zA-Z]*)(\s+\S+)?/,
     (_m, n1, n2, unit, wordPart) => {
       const scaled1 = formatNumber(parseFloat(n1) * multiplier)
       const scaled2 = formatNumber(parseFloat(n2) * multiplier)
