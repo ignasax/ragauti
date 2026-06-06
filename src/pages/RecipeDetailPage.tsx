@@ -89,7 +89,7 @@ export function RecipeDetailPage() {
             recipe.servings ? `${recipe.servings} servings` : null,
           ].filter(Boolean).map((item, i) => (
             <span key={i} className="flex items-center whitespace-nowrap">
-              {i > 0 && <span className="mx-2 text-base leading-none text-warm-border select-none">·</span>}
+              {i > 0 && <span className="mx-2 text-lg leading-none text-warm-muted select-none">·</span>}
               {item}
             </span>
           ))}
