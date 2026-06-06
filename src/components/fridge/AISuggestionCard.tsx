@@ -61,7 +61,10 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
       image_url: null,
       image_urls: [],
     }
-    addRecipe(toSave, { onSuccess: () => setSaved(true) })
+    addRecipe(toSave, {
+      onSuccess: () => setSaved(true),
+      onError: () => { /* save failed silently — button re-enables */ },
+    })
   }
 
   if (status === 'idle') {
@@ -111,9 +114,15 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
 
   // status === 'done'
   const r = recipe!
-  const recipeForBreakdown = { ingredients: r.ingredients, servings: r.servings } as Recipe
+  const recipeForBreakdown: Recipe = {
+    ...r,
+    id: '', user_id: '', created_at: '', updated_at: '',
+    rating: null, categories: [], comments: null,
+    is_favourite: false, source_url: null,
+    image_url: null, image_urls: [],
+  }
   const { matched, missing } = getFridgeIngredientBreakdown(recipeForBreakdown, detected, multiplier)
-  const steps = r.instructions.split('\n').filter(Boolean)
+  const steps = r.instructions.split('\n').map(s => s.trim()).filter(Boolean)
   const totalTime = (r.prep_time_mins ?? 0) + (r.cook_time_mins ?? 0)
 
   return (
