@@ -34,7 +34,7 @@ export function RecipeCard({ recipe, ingredientTerms }: RecipeCardProps) {
               recipe.servings ? `${recipe.servings} serv` : null,
             ].filter(Boolean).map((item, i) => (
               <span key={i}>
-                {i > 0 && <span className="mx-1 text-sm text-warm-muted select-none">·</span>}
+                {i > 0 && <span className="mx-1 text-sm font-bold text-warm-muted select-none">·</span>}
                 {item}
               </span>
             ))}

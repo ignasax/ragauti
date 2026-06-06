@@ -137,7 +137,7 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
               `${Math.round(r.servings * multiplier)} servings`,
             ].filter(Boolean).map((item, i) => (
               <span key={i}>
-                {i > 0 && <span className="mx-2 text-lg text-warm-muted select-none">·</span>}
+                {i > 0 && <span className="mx-2 text-lg font-bold text-warm-muted select-none">·</span>}
                 {item}
               </span>
             ))}
