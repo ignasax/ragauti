@@ -13,6 +13,7 @@ interface GroceryGroupProps {
   items: GroceryItemType[]
   weekStart: string
   recipeId: string | null
+  groupId?: string | null
   hideGroupActions?: boolean
 }
 
@@ -21,6 +22,7 @@ export function GroceryGroup({
   items,
   weekStart,
   recipeId,
+  groupId = null,
   hideGroupActions = false,
 }: GroceryGroupProps) {
   const { mutate: toggleAll } = useToggleAllGroceryItems(weekStart)
@@ -40,7 +42,7 @@ export function GroceryGroup({
   const commitAdd = () => {
     const text = addText.trim()
     if (text) {
-      addItem({ text, recipeId })
+      addItem({ text, recipeId, groupId })
     }
     setAddText('')
     setAdding(false)
@@ -96,6 +98,7 @@ export function GroceryGroup({
               type="text"
               value={addText}
               onChange={e => setAddText(e.target.value)}
+              onBlur={commitAdd}
               onKeyDown={e => {
                 if (e.key === 'Enter') commitAdd()
                 if (e.key === 'Escape') cancelAdd()
@@ -104,11 +107,13 @@ export function GroceryGroup({
               className="flex-1 font-sans text-base bg-transparent border-none outline-none border-b border-warm-accent min-w-0 py-2 text-warm-primary placeholder:text-warm-muted"
             />
             <button
+              onMouseDown={e => e.preventDefault()}
               onClick={commitAdd}
               aria-label="Add item"
               className="w-7 h-7 flex items-center justify-center bg-warm-accent rounded-md text-white text-sm cursor-pointer touch-manipulation"
             >✓</button>
             <button
+              onMouseDown={e => e.preventDefault()}
               onClick={cancelAdd}
               aria-label="Cancel"
               className="w-7 h-7 flex items-center justify-center border border-warm-border rounded-md text-warm-secondary text-sm cursor-pointer touch-manipulation"

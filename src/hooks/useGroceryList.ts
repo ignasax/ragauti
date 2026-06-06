@@ -35,11 +35,13 @@ export function useGenerateGroceryList(weekStart: string) {
       let order = 0
       for (const slot of (slots as (MealPlanSlot & { recipe: { id: string; title: string; ingredients: string } })[]) ?? []) {
         if (!slot.recipe) continue
+        const groupId = crypto.randomUUID()
         const lines = (slot.recipe.ingredients ?? '').split('\n').filter(l => l.trim())
         for (const line of lines) {
           items.push({
             week_start: weekStart,
             recipe_id: slot.recipe.id,
+            group_id: groupId,
             ingredient_text: line.trim(),
             is_checked: false,
             sort_order: order++,
@@ -176,7 +178,7 @@ export function useAddGroceryItem(weekStart: string) {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
       const { data, error } = await supabase.from('grocery_items').insert({
-        week_start: weekStart, recipe_id: null, ingredient_text: text, is_checked: false,
+        week_start: weekStart, recipe_id: null, group_id: null, ingredient_text: text, is_checked: false,
         sort_order: Math.floor(Date.now() / 1000), user_id: user.id,
       }).select().single()
       if (error) throw error
@@ -226,19 +228,20 @@ export function useAddGroceryItemToGroup(weekStart: string) {
     mutationFn: async ({
       text,
       recipeId,
+      groupId,
     }: {
       text: string
       recipeId: string | null
+      groupId: string | null
     }) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
       const { data, error } = await supabase
         .from('grocery_items')
         .insert({
           week_start: weekStart,
           recipe_id: recipeId,
+          group_id: groupId,
           ingredient_text: text,
           is_checked: false,
           sort_order: Math.floor(Date.now() / 1000),
@@ -249,7 +252,29 @@ export function useAddGroceryItemToGroup(weekStart: string) {
       if (error) throw error
       return data as GroceryItem
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
+    onMutate: async ({ text, recipeId, groupId }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', weekStart] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', weekStart])
+      qc.setQueryData<GroceryItem[]>(['grocery', weekStart], old => [
+        ...(old ?? []),
+        {
+          id: `temp_${Date.now()}`,
+          week_start: weekStart,
+          recipe_id: recipeId,
+          group_id: groupId,
+          ingredient_text: text,
+          is_checked: false,
+          sort_order: Math.floor(Date.now() / 1000),
+          user_id: '',
+          created_at: '',
+        } as GroceryItem,
+      ])
+      return { previous }
+    },
+    onError: (_err, _vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', weekStart], ctx.previous)
+    },
+    onSettled: () => qc.invalidateQueries({ queryKey: ['grocery', weekStart] }),
   })
 }
 
@@ -265,13 +290,13 @@ export function useAddRecipeToGrocery() {
       recipeId: string
       items: Array<{ text: string; is_checked: boolean }>
     }) => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
+      const groupId = crypto.randomUUID()
       const rows = items.map((item, i) => ({
         week_start: weekStart,
         recipe_id: recipeId,
+        group_id: groupId,
         ingredient_text: item.text,
         is_checked: item.is_checked,
         sort_order: Math.floor(Date.now() / 1000) + i,
@@ -280,7 +305,29 @@ export function useAddRecipeToGrocery() {
       const { error } = await supabase.from('grocery_items').insert(rows)
       if (error) throw error
     },
-    onSuccess: (_data, vars) =>
-      qc.invalidateQueries({ queryKey: ['grocery', vars.weekStart] }),
+    onMutate: async ({ weekStart, recipeId, items }) => {
+      await qc.cancelQueries({ queryKey: ['grocery', weekStart] })
+      const previous = qc.getQueryData<GroceryItem[]>(['grocery', weekStart])
+      const tempGroupId = `temp_${crypto.randomUUID()}`
+      qc.setQueryData<GroceryItem[]>(['grocery', weekStart], old => [
+        ...(old ?? []),
+        ...items.map((item, i) => ({
+          id: `temp_${Date.now()}_${i}`,
+          week_start: weekStart,
+          recipe_id: recipeId,
+          group_id: tempGroupId,
+          ingredient_text: item.text,
+          is_checked: item.is_checked,
+          sort_order: Math.floor(Date.now() / 1000) + i,
+          user_id: '',
+          created_at: '',
+        } as GroceryItem)),
+      ])
+      return { previous }
+    },
+    onError: (_err, vars, ctx) => {
+      if (ctx?.previous) qc.setQueryData(['grocery', vars.weekStart], ctx.previous)
+    },
+    onSettled: (_data, _err, vars) => qc.invalidateQueries({ queryKey: ['grocery', vars.weekStart] }),
   })
 }

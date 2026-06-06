@@ -54,15 +54,13 @@ export function GroceryItem({ item }: { item: GroceryItemType }) {
           item.is_checked ? 'line-through text-warm-muted' : 'text-warm-primary'
         }`}
       />
-      {item.recipe_id === null && (
-        <button
-          onClick={() => deleteItem({ id: item.id, week_start: item.week_start })}
-          aria-label="Remove item"
-          className="min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation active:opacity-70"
-        >
-          <Trash2 className="w-4 h-4 text-warm-muted" />
-        </button>
-      )}
+      <button
+        onClick={() => deleteItem({ id: item.id, week_start: item.week_start })}
+        aria-label="Remove item"
+        className="min-w-[36px] min-h-[36px] flex items-center justify-center flex-shrink-0 cursor-pointer touch-manipulation active:opacity-70"
+      >
+        <Trash2 className="w-4 h-4 text-warm-muted" />
+      </button>
     </div>
   )
 }

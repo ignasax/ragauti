@@ -39,6 +39,7 @@ export interface GroceryItem {
   user_id: string
   week_start: string
   recipe_id: string | null
+  group_id: string | null
   ingredient_text: string
   is_checked: boolean
   sort_order: number

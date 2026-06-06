@@ -34,13 +34,13 @@ export function GroceryPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [confirmRegen, confirmClear])
 
-  const grouped = new Map<string, { title: string; items: GroceryItem[]; recipeId: string }>()
+  const grouped = new Map<string, { title: string; items: GroceryItem[]; recipeId: string; groupId: string | null }>()
   const other: GroceryItem[] = []
   for (const item of items) {
     if (!item.recipe_id) { other.push(item); continue }
-    const key = item.recipe_id
+    const key = item.group_id ?? item.recipe_id
     if (!grouped.has(key))
-      grouped.set(key, { title: item.recipe?.title ?? 'Recipe', items: [], recipeId: key })
+      grouped.set(key, { title: item.recipe?.title ?? 'Recipe', items: [], recipeId: item.recipe_id, groupId: item.group_id ?? null })
     grouped.get(key)!.items.push(item)
   }
 
@@ -82,13 +82,14 @@ export function GroceryPage() {
         </div>
       ) : (
         <div className="flex flex-col gap-4 pb-28">
-          {[...grouped.entries()].map(([recipeId, group]) => (
+          {[...grouped.entries()].map(([key, group]) => (
             <GroceryGroup
-              key={recipeId}
+              key={key}
               title={group.title}
               items={group.items}
               weekStart={weekStart}
-              recipeId={recipeId}
+              recipeId={group.recipeId}
+              groupId={group.groupId}
             />
           ))}
           <GroceryGroup
