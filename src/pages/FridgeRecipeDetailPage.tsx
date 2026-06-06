@@ -183,7 +183,7 @@ export function FridgeRecipeDetailPage() {
         {/* Add to grocery list */}
         <button
           onClick={handleAddToGrocery}
-          disabled={isAddingToGrocery}
+          disabled={isAddingToGrocery || !recipe.ingredients?.trim()}
           className="w-full bg-warm-accent text-white font-sans font-semibold text-sm py-3 rounded-xl min-h-[44px] active:opacity-80 disabled:opacity-50 cursor-pointer touch-manipulation"
         >
           🛒 Add to grocery list
