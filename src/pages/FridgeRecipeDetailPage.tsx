@@ -113,10 +113,21 @@ export function FridgeRecipeDetailPage() {
         {/* Title + meta */}
         <div>
           <h1 className="font-serif text-2xl font-bold text-warm-primary mb-1">{recipe.title}</h1>
-          <div className="flex flex-wrap gap-3 font-sans text-warm-secondary text-sm mb-2">
-            {recipe.prep_time_mins ? <span>Prep {recipe.prep_time_mins} min</span> : null}
-            {recipe.cook_time_mins ? <span>Cook {recipe.cook_time_mins} min</span> : null}
-            {recipe.rating ? <span>{'★'.repeat(Math.min(3, Math.max(0, Math.floor(recipe.rating))))}</span> : null}
+          <div className="flex items-center flex-nowrap font-sans text-warm-secondary text-sm mb-2 overflow-hidden">
+            {[
+              (recipe.prep_time_mins || recipe.cook_time_mins)
+                ? `${(recipe.prep_time_mins ?? 0) + (recipe.cook_time_mins ?? 0)} min`
+                : null,
+              recipe.rating
+                ? '★'.repeat(Math.min(5, Math.max(0, Math.floor(recipe.rating))))
+                : null,
+              recipe.servings ? `${recipe.servings} servings` : null,
+            ].filter(Boolean).map((item, i) => (
+              <span key={i} className="flex items-center whitespace-nowrap">
+                {i > 0 && <span className="mx-2 text-base leading-none text-warm-border select-none">·</span>}
+                {item}
+              </span>
+            ))}
           </div>
           {(recipe.categories?.length ?? 0) > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
