@@ -39,6 +39,7 @@ Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 }
 
 Rules:
+- title: maximum 50 characters — write a concise, natural name; do not truncate mid-word
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: numbered steps, one per line, joined with \\n
 - times and servings must be plain numbers

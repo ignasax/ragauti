@@ -103,6 +103,7 @@ Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 }
 
 Rules:
+- title: maximum 50 characters — write a concise, natural name; do not truncate mid-word
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: numbered steps, one per line, joined with \\n
 - times and servings must be plain numbers
@@ -138,6 +139,7 @@ Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 }
 
 Rules:
+- title: maximum 50 characters — write a concise, natural name; do not truncate mid-word
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: numbered steps, one per line, joined with \\n
 - times and servings must be plain numbers
@@ -157,7 +159,7 @@ export function sanitizeExtracted(raw: unknown): ExtractedRecipe {
   if (typeof raw !== 'object' || raw === null) return {}
   const obj = raw as Record<string, unknown>
   const result: ExtractedRecipe = {}
-  if (typeof obj.title === 'string') result.title = obj.title
+  if (typeof obj.title === 'string') result.title = obj.title.slice(0, 50).trimEnd()
   if (typeof obj.ingredients === 'string') result.ingredients = obj.ingredients
   if (typeof obj.instructions === 'string') result.instructions = obj.instructions
   if (typeof obj.cook_time_mins === 'number' && Number.isFinite(obj.cook_time_mins)) result.cook_time_mins = Math.max(0, Math.floor(obj.cook_time_mins))
