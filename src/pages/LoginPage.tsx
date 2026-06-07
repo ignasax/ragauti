@@ -16,10 +16,20 @@ export function LoginPage() {
   const { session } = useAuth()
   const navigate = useNavigate()
   const [modal, setModal] = useState<'terms' | 'privacy' | null>(null)
+  const [authError, setAuthError] = useState<string | null>(null)
 
   useEffect(() => {
     if (session) navigate('/recipes', { replace: true })
   }, [session, navigate])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const error = params.get('error')
+    if (error) {
+      setAuthError(decodeURIComponent(error))
+      window.history.replaceState({}, '', '/login')
+    }
+  }, [])
 
   const handleGoogleLogin = async () => {
     await supabase.auth.signInWithOAuth({
@@ -64,6 +74,13 @@ export function LoginPage() {
             </p>
           </div>
         </div>
+
+        {/* Auth error */}
+        {authError && (
+          <div className="w-full bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+            <p className="font-sans text-xs text-red-700 text-center break-words">{authError}</p>
+          </div>
+        )}
 
         {/* Sign in */}
         <div className="w-full flex flex-col items-center gap-3">
