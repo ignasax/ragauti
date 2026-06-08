@@ -1,4 +1,4 @@
-import { extractFromJsonLd, sanitizeExtracted, parseGeneratedRecipe, type ExtractedRecipe, type GeneratedRecipe } from './gemini'
+import { extractFromJsonLd, sanitizeExtracted, parseGeneratedRecipe, type ExtractedRecipe, type GeneratedRecipe, type ImageInput } from './gemini'
 
 const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
 
@@ -13,7 +13,12 @@ function parseGroqJson(content: string): ExtractedRecipe {
   }
 }
 
-export async function extractRecipeFromImageWithGroq(base64: string, mimeType: string, key: string): Promise<ExtractedRecipe> {
+export async function extractRecipeFromImageWithGroq(
+  images: ImageInput[],
+  key: string,
+  context?: string,
+): Promise<ExtractedRecipe> {
+  const contextLine = context ? `\n\nAdditional context from user: ${context}` : ''
   const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
@@ -23,10 +28,13 @@ export async function extractRecipeFromImageWithGroq(base64: string, mimeType: s
         {
           role: 'user',
           content: [
-            { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+            ...images.map(img => ({
+              type: 'image_url',
+              image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
+            })),
             {
               type: 'text',
-              text: `Look at this recipe image and extract the recipe information.
+              text: `Look at ${images.length > 1 ? 'these recipe images' : 'this recipe image'} and extract the recipe information.${contextLine}
 
 Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 {
