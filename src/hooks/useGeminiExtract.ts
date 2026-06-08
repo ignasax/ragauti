@@ -35,8 +35,12 @@ function fileToBase64(file: File): Promise<string> {
 }
 
 async function getAuthHeaders(): Promise<Record<string, string>> {
-  const { data: { session } } = await supabase.auth.getSession()
-  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+  try {
+    const { data: { session } } = await supabase.auth.getSession()
+    return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+  } catch {
+    return {}
+  }
 }
 
 export function useGeminiExtract() {
@@ -78,7 +82,23 @@ export function useGeminiExtract() {
 
     const inputType = detectInputType(trimmed)
 
-    if (inputType === 'youtube' || inputType === 'url') {
+    if (inputType === 'youtube') {
+      await run(async () => {
+        const headers = await getAuthHeaders()
+        const res = await fetch(`/api/youtube?url=${encodeURIComponent(trimmed)}`, { headers })
+        if (!res.ok) {
+          const body = await res.json().catch(() => null)
+          throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch transcript')
+        }
+        const { transcript } = await res.json() as { transcript: string }
+        return provider === 'groq'
+          ? extractRecipeWithGroq(transcript, activeKey)
+          : extractRecipe(transcript, activeKey)
+      })
+      return
+    }
+
+    if (inputType === 'url') {
       await run(async () => {
         const headers = await getAuthHeaders()
         const res = await fetch(`/api/scrape?url=${encodeURIComponent(trimmed)}`, { headers })
