@@ -13,6 +13,10 @@ describe('detectInputType', () => {
   it('detects youtu.be short URLs', () => {
     expect(detectInputType('https://youtu.be/dQw4w9WgXcQ')).toBe('youtube')
   })
+  it('detects youtube.com/shorts URLs', () => {
+    expect(detectInputType('https://www.youtube.com/shorts/dQw4w9WgXcQ')).toBe('youtube')
+    expect(detectInputType('https://youtube.com/shorts/abc123')).toBe('youtube')
+  })
   it('detects regular URLs', () => {
     expect(detectInputType('https://www.allrecipes.com/recipe/123')).toBe('url')
     expect(detectInputType('https://example.com')).toBe('url')

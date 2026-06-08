@@ -3,7 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 import { YoutubeTranscript } from 'youtube-transcript'
 
 function extractVideoId(url: string): string | null {
-  const m = url.match(/(?:youtube\.com\/watch\?(?:.*&)?v=|youtu\.be\/)([^&\n?#]+)/)
+  const m = url.match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/)|youtu\.be\/)([^&\n?#]+)/)
   return m?.[1] ?? null
 }
 
