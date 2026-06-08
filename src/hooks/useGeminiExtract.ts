@@ -1,8 +1,14 @@
 import { useState } from 'react'
-import { extractRecipe, extractRecipeFromImage, type ExtractedRecipe } from '../lib/gemini'
+import {
+  extractRecipe,
+  extractRecipeFromImage,
+  type ExtractedRecipe,
+  type ImageInput,
+} from '../lib/gemini'
 import { extractRecipeWithGroq, extractRecipeFromImageWithGroq } from '../lib/groq'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
 import { supabase } from '../lib/supabase'
+import { detectInputType } from '../utils/extractionInput'
 
 interface ExtractionState {
   isExtracting: boolean
@@ -15,7 +21,7 @@ function computeMissingFields(data: ExtractedRecipe): string[] {
   const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
   return [
     ...required.filter(k => !data[k]),
-    ...((!data.servings || data.servings === 0) ? ['servings'] : []),
+    ...(!data.servings || data.servings === 0 ? ['servings'] : []),
   ]
 }
 
@@ -28,6 +34,11 @@ function fileToBase64(file: File): Promise<string> {
   })
 }
 
+async function getAuthHeaders(): Promise<Record<string, string>> {
+  const { data: { session } } = await supabase.auth.getSession()
+  return session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}
+}
+
 export function useGeminiExtract() {
   const { geminiKey, groqKey, provider } = useGeminiKey()
   const [state, setState] = useState<ExtractionState>({
@@ -36,41 +47,75 @@ export function useGeminiExtract() {
 
   const activeKey = provider === 'groq' ? groqKey : geminiKey
 
-  const extract = async (url: string) => {
-    if (!activeKey) return
+  async function run(fn: () => Promise<ExtractedRecipe>) {
     setState({ isExtracting: true, extracted: null, error: null, missingFields: [] })
     try {
-      const { data: { session } } = await supabase.auth.getSession()
-      const res = await fetch(`/api/scrape?url=${encodeURIComponent(url)}`, {
-        headers: session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {},
+      const data = await fn()
+      setState({ isExtracting: false, extracted: data, error: null, missingFields: computeMissingFields(data) })
+    } catch (err) {
+      setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })
+    }
+  }
+
+  const extractAuto = async (text: string, files: File[]) => {
+    if (!activeKey) return
+    const trimmed = text.trim()
+
+    // Images always take precedence; plain text (not a URL) is passed as optional context
+    if (files.length > 0) {
+      await run(async () => {
+        const images: ImageInput[] = await Promise.all(
+          files.map(async f => ({ base64: await fileToBase64(f), mimeType: f.type }))
+        )
+        const context = trimmed && detectInputType(trimmed) === 'text' ? trimmed : undefined
+        return provider === 'groq'
+          ? extractRecipeFromImageWithGroq(images, activeKey, context)
+          : extractRecipeFromImage(images, activeKey, context)
       })
-      if (!res.ok) {
-        const body = await res.json().catch(() => null)
-        throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')
-      }
-      const { html } = await res.json()
-      const data = provider === 'groq'
-        ? await extractRecipeWithGroq(html, activeKey)
-        : await extractRecipe(html, activeKey)
-      setState({ isExtracting: false, extracted: data, error: null, missingFields: computeMissingFields(data) })
-    } catch (err) {
-      setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })
+      return
     }
+
+    const inputType = detectInputType(trimmed)
+
+    if (inputType === 'youtube') {
+      await run(async () => {
+        const headers = await getAuthHeaders()
+        const res = await fetch(`/api/youtube?url=${encodeURIComponent(trimmed)}`, { headers })
+        if (!res.ok) {
+          const body = await res.json().catch(() => null)
+          throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch transcript')
+        }
+        const { transcript } = await res.json() as { transcript: string }
+        return provider === 'groq'
+          ? extractRecipeWithGroq(transcript, activeKey)
+          : extractRecipe(transcript, activeKey)
+      })
+      return
+    }
+
+    if (inputType === 'url') {
+      await run(async () => {
+        const headers = await getAuthHeaders()
+        const res = await fetch(`/api/scrape?url=${encodeURIComponent(trimmed)}`, { headers })
+        if (!res.ok) {
+          const body = await res.json().catch(() => null)
+          throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')
+        }
+        const { html } = await res.json() as { html: string }
+        return provider === 'groq'
+          ? extractRecipeWithGroq(html, activeKey)
+          : extractRecipe(html, activeKey)
+      })
+      return
+    }
+
+    // Plain text — send directly to AI
+    await run(() =>
+      provider === 'groq'
+        ? extractRecipeWithGroq(trimmed, activeKey)
+        : extractRecipe(trimmed, activeKey)
+    )
   }
 
-  const extractFromImage = async (file: File) => {
-    if (!activeKey) return
-    setState({ isExtracting: true, extracted: null, error: null, missingFields: [] })
-    try {
-      const base64 = await fileToBase64(file)
-      const data = provider === 'groq'
-        ? await extractRecipeFromImageWithGroq(base64, file.type, activeKey)
-        : await extractRecipeFromImage(base64, file.type, activeKey)
-      setState({ isExtracting: false, extracted: data, error: null, missingFields: computeMissingFields(data) })
-    } catch (err) {
-      setState({ isExtracting: false, extracted: null, error: (err as Error).message, missingFields: [] })
-    }
-  }
-
-  return { ...state, extract, extractFromImage, activeKey }
+  return { ...state, extractAuto, activeKey }
 }
