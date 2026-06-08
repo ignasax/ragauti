@@ -122,10 +122,20 @@ export function extractFromJsonLd(html: string): ExtractedRecipe | null {
   return null
 }
 
-export async function extractRecipeFromImage(base64: string, mimeType: string, key: string): Promise<ExtractedRecipe> {
+export interface ImageInput {
+  base64: string
+  mimeType: string
+}
+
+export async function extractRecipeFromImage(
+  images: ImageInput[],
+  key: string,
+  context?: string,
+): Promise<ExtractedRecipe> {
   const genAI = new GoogleGenerativeAI(key)
   const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-lite' })
-  const prompt = `Look at this recipe image and extract the recipe information.
+  const contextLine = context ? `\n\nAdditional context from user: ${context}` : ''
+  const prompt = `Look at ${images.length > 1 ? 'these recipe images' : 'this recipe image'} and extract the recipe information.${contextLine}
 
 Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 {
@@ -144,10 +154,11 @@ Rules:
 - times and servings must be plain numbers
 - Return ONLY the JSON object, no explanation`
 
-  const result = await model.generateContent([
-    { inlineData: { mimeType, data: base64 } },
+  const parts = [
+    ...images.map(img => ({ inlineData: { mimeType: img.mimeType, data: img.base64 } })),
     { text: prompt },
-  ])
+  ]
+  const result = await model.generateContent(parts)
   const response = result.response.text()
   const match = response.match(/\{[\s\S]*\}/)
   if (!match) throw new Error('No JSON in Gemini response')
