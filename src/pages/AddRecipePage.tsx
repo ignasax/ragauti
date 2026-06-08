@@ -52,7 +52,6 @@ export function AddRecipePage() {
   }
 
   function removeFile(index: number) {
-    URL.revokeObjectURL(thumbnailUrls[index])
     setAttachedFiles(prev => prev.filter((_, i) => i !== index))
     setThumbnailUrls(prev => prev.filter((_, i) => i !== index))
   }
