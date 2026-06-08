@@ -82,23 +82,7 @@ export function useGeminiExtract() {
 
     const inputType = detectInputType(trimmed)
 
-    if (inputType === 'youtube') {
-      await run(async () => {
-        const headers = await getAuthHeaders()
-        const res = await fetch(`/api/youtube?url=${encodeURIComponent(trimmed)}`, { headers })
-        if (!res.ok) {
-          const body = await res.json().catch(() => null)
-          throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch transcript')
-        }
-        const { transcript } = await res.json() as { transcript: string }
-        return provider === 'groq'
-          ? extractRecipeWithGroq(transcript, activeKey)
-          : extractRecipe(transcript, activeKey)
-      })
-      return
-    }
-
-    if (inputType === 'url') {
+    if (inputType === 'youtube' || inputType === 'url') {
       await run(async () => {
         const headers = await getAuthHeaders()
         const res = await fetch(`/api/scrape?url=${encodeURIComponent(trimmed)}`, { headers })
