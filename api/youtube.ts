@@ -28,7 +28,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!videoId) return res.status(400).json({ error: 'Invalid YouTube URL' })
 
   try {
-    const segments = await YoutubeTranscript.fetchTranscript(videoId)
+    const segments = await YoutubeTranscript.fetchTranscript(videoId, {
+      fetch: (url: string, init?: RequestInit) => fetch(url, { ...init, signal: AbortSignal.timeout(15_000) })
+    })
     const transcript = segments.map(s => s.text).join(' ')
     return res.status(200).json({ transcript })
   } catch (err) {
