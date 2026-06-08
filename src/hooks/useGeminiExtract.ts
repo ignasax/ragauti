@@ -29,7 +29,7 @@ function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader()
     reader.onload = () => resolve((reader.result as string).split(',')[1])
-    reader.onerror = reject
+    reader.onerror = () => reject(new Error('Failed to read file'))
     reader.readAsDataURL(file)
   })
 }
@@ -60,6 +60,7 @@ export function useGeminiExtract() {
   const extractAuto = async (text: string, files: File[]) => {
     if (!activeKey) return
     const trimmed = text.trim()
+    if (!trimmed && files.length === 0) return
 
     // Images always take precedence; plain text (not a URL) is passed as optional context
     if (files.length > 0) {
