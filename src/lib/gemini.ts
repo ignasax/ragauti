@@ -301,3 +301,41 @@ Rules:
   const result = await model.generateContent(prompt)
   return parseGeneratedRecipe(result.response.text())
 }
+
+export async function generateIngredientTags(
+  ingredients: string,
+  key: string,
+): Promise<string[]> {
+  const prompt = `Extract a list of English ingredient names from this ingredient list.
+Return ONLY a valid JSON array of lowercase strings — no quantities, no units, no preparation notes, just the base name.
+Example: ["chicken", "garlic", "cream", "lemon"]
+
+Ingredients:
+${ingredients}`
+
+  const response = await callGemini(prompt, key)
+  const match = response.match(/\[[\s\S]*\]/)
+  if (!match) throw new Error('No ingredient array in Gemini response')
+  const parsed: unknown = JSON.parse(match[0])
+  if (!Array.isArray(parsed)) throw new Error('Expected array from Gemini')
+  return parsed.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    .map(t => t.toLowerCase().trim())
+}
+
+export async function translateIngredientTerm(
+  term: string,
+  key: string,
+): Promise<string> {
+  const prompt = `Translate this food ingredient term to English. Return ONLY the English word, lowercase, nothing else.
+If it is already English, return it unchanged.
+
+Term: ${term}`
+
+  try {
+    const response = await callGemini(prompt, key)
+    const translated = response.trim().toLowerCase().replace(/[^a-z\s]/g, '').trim()
+    return translated || term
+  } catch {
+    return term
+  }
+}

@@ -243,3 +243,89 @@ Rules:
   const data = await res.json()
   return parseGeneratedRecipe((data.choices?.[0]?.message?.content ?? '') as string)
 }
+
+export async function generateIngredientTagsWithGroq(
+  ingredients: string,
+  key: string,
+): Promise<string[]> {
+  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify({
+      model: GROQ_MODEL,
+      messages: [
+        {
+          role: 'system',
+          content: 'You are an ingredient extractor. Respond with a single valid JSON array and nothing else — no markdown, no explanation.',
+        },
+        {
+          role: 'user',
+          content: `Extract a list of English ingredient names from this ingredient list.
+Return ONLY a valid JSON array of lowercase strings — no quantities, no units, no preparation notes, just the base name.
+Example: ["chicken", "garlic", "cream", "lemon"]
+
+Ingredients:
+${ingredients}`,
+        },
+      ],
+      temperature: 0.1,
+      response_format: { type: 'json_object' },
+    }),
+  })
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null)
+    throw new Error(
+      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
+    )
+  }
+
+  const data = await res.json()
+  const content = (data.choices?.[0]?.message?.content ?? '') as string
+  // Groq json_object wraps the array; try direct parse then look for array
+  let parsed: unknown
+  try {
+    const obj = JSON.parse(content) as Record<string, unknown>
+    // Handle {"ingredients": [...]} or {"tags": [...]} wrapper
+    parsed = Array.isArray(obj) ? obj : Object.values(obj).find(v => Array.isArray(v)) ?? obj
+  } catch {
+    const match = content.match(/\[[\s\S]*\]/)
+    if (!match) throw new Error('No ingredient array in Groq response')
+    parsed = JSON.parse(match[0])
+  }
+  if (!Array.isArray(parsed)) throw new Error('Expected array from Groq')
+  return parsed.filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+    .map(t => t.toLowerCase().trim())
+}
+
+export async function translateIngredientTermWithGroq(
+  term: string,
+  key: string,
+): Promise<string> {
+  try {
+    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+      body: JSON.stringify({
+        model: GROQ_MODEL,
+        messages: [
+          {
+            role: 'user',
+            content: `Translate this food ingredient term to English. Return ONLY the English word, lowercase, nothing else.
+If it is already English, return it unchanged.
+
+Term: ${term}`,
+          },
+        ],
+        temperature: 0.1,
+      }),
+    })
+    if (!res.ok) return term
+    const data = await res.json()
+    const translated = ((data.choices?.[0]?.message?.content ?? '') as string)
+      .trim().toLowerCase().replace(/[^a-z\s]/g, '').trim()
+    return translated || term
+  } catch {
+    return term
+  }
+}
