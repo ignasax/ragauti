@@ -113,3 +113,75 @@ describe('filterByFridge', () => {
     expect(filterByFridge([chicken, pasta], [])).toHaveLength(0)
   })
 })
+
+describe('filterRecipes – ingredientTagTerms', () => {
+  const withTags: Recipe = {
+    ...base,
+    ingredients: '2 vištiena filė\n1 citrina',
+    ingredient_tags: ['chicken', 'lemon'],
+  }
+
+  it('matches recipe via ingredient_tags when raw term not in ingredients text', () => {
+    expect(filterRecipes([withTags], { ingredientTagTerms: ['chicken'] })).toHaveLength(1)
+  })
+
+  it('no match when tag term absent from ingredient_tags', () => {
+    expect(filterRecipes([withTags], { ingredientTagTerms: ['garlic'] })).toHaveLength(0)
+  })
+
+  it('matches via ingredients text even when ingredientTagTerms present', () => {
+    expect(filterRecipes([withTags], {
+      ingredientTerms: ['vištiena'],
+      ingredientTagTerms: ['chicken'],
+    })).toHaveLength(1)
+  })
+
+  it('requires ALL terms to match (tag or text) when multiple given', () => {
+    // lemon matches via tags, vištiena matches via text
+    expect(filterRecipes([withTags], {
+      ingredientTerms: ['vištiena', 'nothere'],
+      ingredientTagTerms: ['chicken', 'garlic'],
+    })).toHaveLength(0)
+  })
+
+  it('a single term matches if raw OR tag matches', () => {
+    // "chicken" is in ingredient_tags; not in ingredients text
+    expect(filterRecipes([withTags], {
+      ingredientTerms: ['chicken'],
+      ingredientTagTerms: ['chicken'],
+    })).toHaveLength(1)
+  })
+
+  it('partial tag match — tag contains the search term', () => {
+    const r = { ...base, ingredients: 'pasta', ingredient_tags: ['pasta', 'tomato sauce'] }
+    expect(filterRecipes([r], { ingredientTagTerms: ['tomato'] })).toHaveLength(1)
+  })
+})
+
+describe('scoreFridgeMatch – with ingredient_tags', () => {
+  const lithuanian: Recipe = {
+    ...base,
+    ingredients: '2 vištiena filė\n100g grietinė\njuice of 1 citrina\ndruskos',
+    ingredient_tags: ['chicken', 'cream', 'lemon'],
+  }
+
+  it('matches via tags when AI detected English names', () => {
+    const r = scoreFridgeMatch(lithuanian, ['chicken', 'cream', 'lemon'])
+    expect(r.matched).toBe(3)
+    expect(r.total).toBe(3)
+    expect(r.score).toBeCloseTo(1.0)
+  })
+
+  it('partial match via tags', () => {
+    const r = scoreFridgeMatch(lithuanian, ['chicken'])
+    expect(r.matched).toBe(1)
+    expect(r.total).toBe(3)
+  })
+
+  it('falls back to text match when ingredient_tags is empty', () => {
+    const noTags: Recipe = { ...base, ingredients: 'chicken\ngarlic', ingredient_tags: [] }
+    const r = scoreFridgeMatch(noTags, ['chicken'])
+    expect(r.matched).toBe(1)
+    expect(r.total).toBe(2)
+  })
+})
