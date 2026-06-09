@@ -156,6 +156,21 @@ describe('filterRecipes – ingredientTagTerms', () => {
     const r = { ...base, ingredients: 'pasta', ingredient_tags: ['pasta', 'tomato sauce'] }
     expect(filterRecipes([r], { ingredientTagTerms: ['tomato'] })).toHaveLength(1)
   })
+
+  it('asymmetric arrays: extra ingredientTerms positions behave as text-only', () => {
+    const r = { ...base, ingredients: 'chicken\ngarlic', ingredient_tags: ['chicken'] }
+    // Position 0: ingredientTerms='chicken', ingredientTagTerms='chicken' → text match
+    // Position 1: ingredientTerms='garlic', ingredientTagTerms=undefined → text-only
+    expect(filterRecipes([r], {
+      ingredientTerms: ['chicken', 'garlic'],
+      ingredientTagTerms: ['chicken'],
+    })).toHaveLength(1)
+  })
+
+  it('tagTerm partial match works both directions: recipe tag "tomato sauce" matches search "tomato"', () => {
+    const r = { ...base, ingredients: 'canned tomatoes', ingredient_tags: ['tomato sauce'] }
+    expect(filterRecipes([r], { ingredientTagTerms: ['tomato'] })).toHaveLength(1)
+  })
 })
 
 describe('scoreFridgeMatch – with ingredient_tags', () => {

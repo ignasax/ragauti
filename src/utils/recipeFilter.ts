@@ -23,6 +23,10 @@ export function filterRecipes(recipes: Recipe[], filters: RecipeFilters): Recipe
       const tags = r.ingredient_tags ?? []
       const termCount = Math.max(ingredientTerms?.length ?? 0, ingredientTagTerms?.length ?? 0)
 
+      // ingredientTerms[i] and ingredientTagTerms[i] represent the same search term:
+      // raw (for text match) and English-translated (for tag match).
+      // A recipe passes position i if EITHER the raw term is in the ingredients text
+      // OR the translated term is in the ingredient_tags array.
       for (let i = 0; i < termCount; i++) {
         const rawTerm = ingredientTerms?.[i]
         const tagTerm = ingredientTagTerms?.[i]
