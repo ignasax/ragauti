@@ -1,5 +1,6 @@
 import { useState, useMemo, useEffect, useRef } from 'react'
 import { useRecipes } from '../hooks/useRecipes'
+import { useIngredientTagsBackfill } from '../hooks/useIngredientTagsBackfill'
 import { filterRecipes, type RecipeFilters } from '../utils/recipeFilter'
 import { getCachedTranslation, setCachedTranslation } from '../utils/translationCache'
 import { translateIngredientTerm } from '../lib/gemini'
@@ -15,6 +16,7 @@ export function RecipesPage() {
   const { data: recipes = [], isLoading } = useRecipes()
   const { geminiKey, groqKey, provider } = useGeminiKey()
   const activeKey = provider === 'groq' ? groqKey : geminiKey
+  useIngredientTagsBackfill()
 
   const [search, setSearch] = useState('')
   const [searchMode, setSearchMode] = useState<SearchMode>('name')
