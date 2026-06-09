@@ -145,7 +145,8 @@ Return ONLY a valid JSON object with these fields (omit fields you cannot find):
   "instructions": "1. Preheat oven to 350F\\n2. Mix ingredients\\n...",
   "cook_time_mins": 45,
   "prep_time_mins": 20,
-  "servings": 8
+  "servings": 8,
+  "ingredient_tags": ["flour", "salt"]
 }
 
 Rules:
@@ -153,6 +154,7 @@ Rules:
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: numbered steps, one per line, joined with \\n
 - times and servings must be plain numbers
+- ingredient_tags: array of lowercase English ingredient base names only — no quantities, no units, no preparation notes
 - Return ONLY the JSON object, no explanation`
 
   const parts = [
@@ -182,7 +184,8 @@ Return ONLY a valid JSON object with these fields (omit fields you cannot find):
   "image_url": "https://...",
   "cook_time_mins": 45,
   "prep_time_mins": 20,
-  "servings": 8
+  "servings": 8,
+  "ingredient_tags": ["flour", "salt"]
 }
 
 Rules:
@@ -190,6 +193,7 @@ Rules:
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: numbered steps, one per line, joined with \\n
 - times and servings must be plain numbers
+- ingredient_tags: array of lowercase English ingredient base names only — no quantities, no units, no preparation notes
 - Return ONLY the JSON object, no explanation
 
 Page text:
