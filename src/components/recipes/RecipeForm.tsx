@@ -19,6 +19,7 @@ const empty: RecipeFormData = {
   title: '', ingredients: '', instructions: '', image_url: null, image_urls: [],
   cook_time_mins: null, prep_time_mins: null, servings: 1,
   rating: null, categories: [], comments: null, is_favourite: false, source_url: null,
+  ingredient_tags: [],
 }
 
 export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, topSlot }: RecipeFormProps) {
