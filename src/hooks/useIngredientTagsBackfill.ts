@@ -27,8 +27,8 @@ export function useIngredientTagsBackfill() {
           : generateIngredientTags(recipe.ingredients, activeKey)
         ).catch(() => null)
         if (!tags || cancelled) break
-        await supabase.from('recipes').update({ ingredient_tags: tags }).eq('id', recipe.id)
-        didUpdate = true
+        const { error } = await supabase.from('recipes').update({ ingredient_tags: tags }).eq('id', recipe.id)
+        if (!error) didUpdate = true
         await new Promise(r => setTimeout(r, 500))
       }
       if (didUpdate && !cancelled) {
