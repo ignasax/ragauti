@@ -6,6 +6,8 @@ import { GeminiKeyBanner } from '../components/auth/GeminiKeyBanner'
 import { useAddRecipe } from '../hooks/useRecipes'
 import { useGeminiExtract } from '../hooks/useGeminiExtract'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
+import { generateIngredientTags } from '../lib/gemini'
+import { generateIngredientTagsWithGroq } from '../lib/groq'
 
 const MAX_FILES = 5
 
@@ -16,6 +18,7 @@ export function AddRecipePage() {
   const { geminiKey, groqKey, provider } = useGeminiKey()
   const { extractAuto, isExtracting, extracted, error, missingFields } = useGeminiExtract()
   const hasActiveKey = provider === 'groq' ? !!groqKey : !!geminiKey
+  const activeKey = provider === 'groq' ? groqKey : geminiKey
 
   const [textInput, setTextInput] = useState('')
   const [attachedFiles, setAttachedFiles] = useState<File[]>([])
@@ -177,7 +180,17 @@ export function AddRecipePage() {
         topSlot={topSlot}
         submitLabel="Save Recipe"
         isSubmitting={isPending}
-        onSubmit={async (data) => { await mutateAsync(data); navigate('/recipes', { replace: true }) }}
+        onSubmit={async (data) => {
+          let ingredient_tags = extracted?.ingredient_tags ?? []
+          if (!ingredient_tags.length && activeKey) {
+            ingredient_tags = await (provider === 'groq'
+              ? generateIngredientTagsWithGroq(data.ingredients, activeKey)
+              : generateIngredientTags(data.ingredients, activeKey)
+            ).catch(() => [])
+          }
+          await mutateAsync({ ...data, ingredient_tags })
+          navigate('/recipes', { replace: true })
+        }}
       />
     </div>
   )
