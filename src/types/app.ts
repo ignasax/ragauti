@@ -20,6 +20,7 @@ export interface Recipe {
   comments: string | null
   is_favourite: boolean
   source_url: string | null
+  ingredient_tags: string[]
   created_at: string
   updated_at: string
 }

@@ -6,7 +6,7 @@ const base: Recipe = {
   id: '1', user_id: 'u1', title: 'Pasta', ingredients: 'garlic\npasta',
   instructions: 'cook', image_url: null, image_urls: [], cook_time_mins: 20, prep_time_mins: 5,
   servings: 2, rating: 4, categories: ['Italian'], comments: null,
-  is_favourite: false, source_url: null, created_at: '', updated_at: '',
+  is_favourite: false, source_url: null, ingredient_tags: [], created_at: '', updated_at: '',
 }
 
 describe('filterRecipes', () => {

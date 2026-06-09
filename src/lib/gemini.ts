@@ -15,6 +15,7 @@ export interface ExtractedRecipe {
   cook_time_mins?: number
   prep_time_mins?: number
   servings?: number
+  ingredient_tags?: string[]
 }
 
 export interface GeneratedRecipe {
@@ -216,6 +217,12 @@ export function sanitizeExtracted(raw: unknown): ExtractedRecipe {
       const u = new URL(obj.image_url)
       if (u.protocol === 'https:' || u.protocol === 'http:') result.image_url = obj.image_url
     } catch { /* skip invalid image_url */ }
+  }
+  if (Array.isArray(obj.ingredient_tags)) {
+    result.ingredient_tags = obj.ingredient_tags
+      .filter((t): t is string => typeof t === 'string' && t.trim().length > 0)
+      .map(t => t.toLowerCase().trim())
+      .slice(0, 100)
   }
   return result
 }
