@@ -6,7 +6,7 @@ const base: Recipe = {
   id: '1', user_id: 'u1', title: 'Pasta', ingredients: 'garlic\npasta',
   instructions: 'cook', image_url: null, image_urls: [], cook_time_mins: 20, prep_time_mins: 5,
   servings: 2, rating: 4, categories: ['Italian'], comments: null,
-  is_favourite: false, source_url: null, ingredient_tags: [], created_at: '', updated_at: '',
+  is_favourite: false, source_url: null, created_at: '', updated_at: '',
 }
 
 describe('filterRecipes', () => {
@@ -111,92 +111,5 @@ describe('filterByFridge', () => {
 
   it('returns empty array when detected list is empty', () => {
     expect(filterByFridge([chicken, pasta], [])).toHaveLength(0)
-  })
-})
-
-describe('filterRecipes – ingredientTagTerms', () => {
-  const withTags: Recipe = {
-    ...base,
-    ingredients: '2 vištiena filė\n1 citrina',
-    ingredient_tags: ['chicken', 'lemon'],
-  }
-
-  it('matches recipe via ingredient_tags when raw term not in ingredients text', () => {
-    expect(filterRecipes([withTags], { ingredientTagTerms: ['chicken'] })).toHaveLength(1)
-  })
-
-  it('no match when tag term absent from ingredient_tags', () => {
-    expect(filterRecipes([withTags], { ingredientTagTerms: ['garlic'] })).toHaveLength(0)
-  })
-
-  it('matches via ingredients text even when ingredientTagTerms present', () => {
-    expect(filterRecipes([withTags], {
-      ingredientTerms: ['vištiena'],
-      ingredientTagTerms: ['chicken'],
-    })).toHaveLength(1)
-  })
-
-  it('requires ALL terms to match (tag or text) when multiple given', () => {
-    // lemon matches via tags, vištiena matches via text
-    expect(filterRecipes([withTags], {
-      ingredientTerms: ['vištiena', 'nothere'],
-      ingredientTagTerms: ['chicken', 'garlic'],
-    })).toHaveLength(0)
-  })
-
-  it('a single term matches if raw OR tag matches', () => {
-    // "chicken" is in ingredient_tags; not in ingredients text
-    expect(filterRecipes([withTags], {
-      ingredientTerms: ['chicken'],
-      ingredientTagTerms: ['chicken'],
-    })).toHaveLength(1)
-  })
-
-  it('partial tag match — tag contains the search term', () => {
-    const r = { ...base, ingredients: 'pasta', ingredient_tags: ['pasta', 'tomato sauce'] }
-    expect(filterRecipes([r], { ingredientTagTerms: ['tomato'] })).toHaveLength(1)
-  })
-
-  it('asymmetric arrays: extra ingredientTerms positions behave as text-only', () => {
-    const r = { ...base, ingredients: 'chicken\ngarlic', ingredient_tags: ['chicken'] }
-    // Position 0: ingredientTerms='chicken', ingredientTagTerms='chicken' → text match
-    // Position 1: ingredientTerms='garlic', ingredientTagTerms=undefined → text-only
-    expect(filterRecipes([r], {
-      ingredientTerms: ['chicken', 'garlic'],
-      ingredientTagTerms: ['chicken'],
-    })).toHaveLength(1)
-  })
-
-  it('tagTerm partial match works both directions: recipe tag "tomato sauce" matches search "tomato"', () => {
-    const r = { ...base, ingredients: 'canned tomatoes', ingredient_tags: ['tomato sauce'] }
-    expect(filterRecipes([r], { ingredientTagTerms: ['tomato'] })).toHaveLength(1)
-  })
-})
-
-describe('scoreFridgeMatch – with ingredient_tags', () => {
-  const lithuanian: Recipe = {
-    ...base,
-    ingredients: '2 vištiena filė\n100g grietinė\njuice of 1 citrina\ndruskos',
-    ingredient_tags: ['chicken', 'cream', 'lemon'],
-  }
-
-  it('matches via tags when AI detected English names', () => {
-    const r = scoreFridgeMatch(lithuanian, ['chicken', 'cream', 'lemon'])
-    expect(r.matched).toBe(3)
-    expect(r.total).toBe(3)
-    expect(r.score).toBeCloseTo(1.0)
-  })
-
-  it('partial match via tags', () => {
-    const r = scoreFridgeMatch(lithuanian, ['chicken'])
-    expect(r.matched).toBe(1)
-    expect(r.total).toBe(3)
-  })
-
-  it('falls back to text match when ingredient_tags is empty', () => {
-    const noTags: Recipe = { ...base, ingredients: 'chicken\ngarlic', ingredient_tags: [] }
-    const r = scoreFridgeMatch(noTags, ['chicken'])
-    expect(r.matched).toBe(1)
-    expect(r.total).toBe(2)
   })
 })
