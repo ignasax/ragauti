@@ -61,6 +61,7 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
       source_url: null,
       image_url: null,
       image_urls: [],
+      ingredient_tags: [],
     }
     addRecipe(toSave, {
       onSuccess: () => setSaved(true),
@@ -120,7 +121,7 @@ export function AISuggestionCard({ slotIndex, detected, provider, geminiKey, gro
     id: '', user_id: '', created_at: '', updated_at: '',
     rating: null, categories: [], comments: null,
     is_favourite: false, source_url: null,
-    image_url: null, image_urls: [],
+    image_url: null, image_urls: [], ingredient_tags: [],
   }
   const pantryLower = new Set(HOUSEHOLD_PANTRY.map(p => p.toLowerCase()))
   const allAvailable = [...detected, ...HOUSEHOLD_PANTRY]
