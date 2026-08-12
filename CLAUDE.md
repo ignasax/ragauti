@@ -13,7 +13,7 @@ Ragauti is a mobile-first recipe manager for personal use. Users paste a URL and
 - **Frontend:** React + Vite + TypeScript
 - **Backend/DB:** Supabase (Google OAuth, PostgreSQL, Row-Level Security)
 - **Hosting:** Vercel
-- **AI extraction:** Groq (`llama-3.3-70b-versatile`) or Gemini 2.0 Flash Lite — client-side, user's own API key stored in Supabase `profiles` table
+- **AI extraction:** Groq (`qwen/qwen3.6-27b`) or Gemini 2.0 Flash Lite — client-side, user's own API key stored in Supabase `profiles` table
 - **Web scraping:** Jina AI Reader (`r.jina.ai`) — Vercel serverless function proxies the URL through Jina, which returns clean LLM-ready markdown
 
 ## Commands

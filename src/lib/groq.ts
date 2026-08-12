@@ -1,6 +1,6 @@
 import { extractFromJsonLd, sanitizeExtracted, parseGeneratedRecipe, type ExtractedRecipe, type GeneratedRecipe, type ImageInput } from './gemini'
 
-const GROQ_MODEL = 'meta-llama/llama-4-scout-17b-16e-instruct'
+const GROQ_MODEL = 'qwen/qwen3.6-27b'
 
 function parseGroqJson(content: string): ExtractedRecipe {
   try {
