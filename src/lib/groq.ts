@@ -99,7 +99,9 @@ export async function extractRecipeWithGroq(html: string, key: string): Promise<
   const fromLd = extractFromJsonLd(html)
   if (fromLd && required.every(k => fromLd[k])) return fromLd
 
-  const text = html.slice(0, 50_000)
+  // This account's Groq input-token cap is 7000/min (~3.2 chars/token observed),
+  // so keep well under that to leave room for the prompt wrapper.
+  const text = html.slice(0, 18_000)
 
   const data = await groqFetch({
     model: GROQ_MODEL,
