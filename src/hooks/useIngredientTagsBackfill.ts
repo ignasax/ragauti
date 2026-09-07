@@ -6,6 +6,10 @@ import { generateIngredientTags } from '../lib/gemini'
 import { generateIngredientTagsWithGroq } from '../lib/groq'
 import { supabase } from '../lib/supabase'
 
+const BACKFILL_SESSION_KEY = 'ragauti_ingredient_tags_backfill_ran'
+const BACKFILL_BATCH_SIZE = 3
+const BACKFILL_DELAY_MS = 3000
+
 export function useIngredientTagsBackfill() {
   const { data: recipes } = useRecipes()
   const { geminiKey, groqKey, provider } = useGeminiKey()
@@ -14,9 +18,11 @@ export function useIngredientTagsBackfill() {
 
   useEffect(() => {
     if (!activeKey || !recipes?.length) return
-    const untagged = recipes.filter(r => !r.ingredient_tags?.length).slice(0, 10)
+    if (sessionStorage.getItem(BACKFILL_SESSION_KEY)) return
+    const untagged = recipes.filter(r => !r.ingredient_tags?.length).slice(0, BACKFILL_BATCH_SIZE)
     if (!untagged.length) return
 
+    sessionStorage.setItem(BACKFILL_SESSION_KEY, '1')
     let cancelled = false
     let didUpdate = false
     ;(async () => {
@@ -29,7 +35,7 @@ export function useIngredientTagsBackfill() {
         if (!tags || cancelled) break
         const { error } = await supabase.from('recipes').update({ ingredient_tags: tags }).eq('id', recipe.id)
         if (!error) didUpdate = true
-        await new Promise(r => setTimeout(r, 500))
+        await new Promise(r => setTimeout(r, BACKFILL_DELAY_MS))
       }
       if (didUpdate && !cancelled) {
         qc.invalidateQueries({ queryKey: ['recipes'] })

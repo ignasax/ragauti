@@ -13,28 +13,56 @@ function parseGroqJson(content: string): ExtractedRecipe {
   }
 }
 
+type GroqErrorBody = { error?: { message?: string } }
+type GroqResponse = { choices?: { message?: { content?: string } }[] }
+
+// Groq's free tier has a very small per-minute token budget. On a 429, Groq's own
+// error message tells us exactly how long to wait ("Please try again in 9.96s") —
+// so wait that long and retry once before surfacing the error to the user.
+async function groqFetch(body: Record<string, unknown>, key: string): Promise<GroqResponse> {
+  const doFetch = () => fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
+    body: JSON.stringify(body),
+  })
+
+  let res = await doFetch()
+
+  if (res.status === 429) {
+    const errBody = await res.json().catch(() => null) as GroqErrorBody | null
+    const match = errBody?.error?.message?.match(/try again in ([\d.]+)s/i)
+    const waitMs = match ? Math.min(Number(match[1]) * 1000 + 500, 60_000) : 5000
+    await new Promise(r => setTimeout(r, waitMs))
+    res = await doFetch()
+  }
+
+  if (!res.ok) {
+    const errBody = await res.json().catch(() => null) as GroqErrorBody | null
+    throw new Error(errBody?.error?.message ?? `Groq error ${res.status}`)
+  }
+
+  return res.json()
+}
+
 export async function extractRecipeFromImageWithGroq(
   images: ImageInput[],
   key: string,
   context?: string,
 ): Promise<ExtractedRecipe> {
   const contextLine = context ? `\n\nAdditional context from user: ${context}` : ''
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        {
-          role: 'user',
-          content: [
-            ...images.map(img => ({
-              type: 'image_url',
-              image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
-            })),
-            {
-              type: 'text',
-              text: `Look at ${images.length > 1 ? 'these recipe images' : 'this recipe image'} and extract the recipe information.${contextLine}
+  const data = await groqFetch({
+    model: GROQ_MODEL,
+    messages: [
+      {
+        role: 'user',
+        content: [
+          ...images.map(img => ({
+            type: 'image_url',
+            image_url: { url: `data:${img.mimeType};base64,${img.base64}` },
+          })),
+          {
+            type: 'text',
+            text: `Look at ${images.length > 1 ? 'these recipe images' : 'this recipe image'} and extract the recipe information.${contextLine}
 
 Return ONLY a valid JSON object with these fields (omit fields you cannot find):
 {
@@ -54,20 +82,13 @@ Rules:
 - times and servings must be plain numbers
 - ingredient_tags: array of lowercase English ingredient base names only — no quantities, no units, no preparation notes
 - Return ONLY the JSON object, no explanation`,
-            },
-          ],
-        },
-      ],
-      temperature: 0.1,
-    }),
-  })
+          },
+        ],
+      },
+    ],
+    temperature: 0.1,
+  }, key)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error((body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`)
-  }
-
-  const data = await res.json()
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
 }
 
@@ -78,22 +99,16 @@ export async function extractRecipeWithGroq(html: string, key: string): Promise<
 
   const text = html.slice(0, 50_000)
 
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'Authorization': `Bearer ${key}`,
-    },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a recipe data extractor. Respond with a single valid JSON object and nothing else — no markdown, no explanation, no code fences.',
-        },
-        {
-          role: 'user',
-          content: `This is the text content of a recipe web page. Ignore any blog stories, comments, ads, or unrelated content. Find and extract ONLY the recipe information.
+  const data = await groqFetch({
+    model: GROQ_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a recipe data extractor. Respond with a single valid JSON object and nothing else — no markdown, no explanation, no code fences.',
+      },
+      {
+        role: 'user',
+        content: `This is the text content of a recipe web page. Ignore any blog stories, comments, ads, or unrelated content. Find and extract ONLY the recipe information.
 
 Return a JSON object with these fields (omit fields you cannot find):
 {
@@ -115,21 +130,12 @@ Rules:
 
 Page text:
 ${text}`,
-        },
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-    }),
-  })
+      },
+    ],
+    temperature: 0.1,
+    response_format: { type: 'json_object' },
+  }, key)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error(
-      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
-    )
-  }
-
-  const data = await res.json()
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
 }
 
@@ -138,18 +144,15 @@ export async function detectFridgeIngredientsWithGroq(
   mimeType: string,
   key: string
 ): Promise<string[]> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [{
-        role: 'user',
-        content: [
-          { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
-          {
-            type: 'text',
-            text: `Look at this photo and identify the food ingredients you can see.
+  const data = await groqFetch({
+    model: GROQ_MODEL,
+    messages: [{
+      role: 'user',
+      content: [
+        { type: 'image_url', image_url: { url: `data:${mimeType};base64,${base64}` } },
+        {
+          type: 'text',
+          text: `Look at this photo and identify the food ingredients you can see.
 
 Return ONLY a valid JSON array of ingredient name strings. Rules:
 - Include only meaningful food ingredients (vegetables, meat, dairy, fruit, condiments, etc.)
@@ -159,21 +162,12 @@ Return ONLY a valid JSON array of ingredient name strings. Rules:
 - Return ONLY the JSON array, no explanation, no markdown
 
 Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`,
-          },
-        ],
-      }],
-      temperature: 0.1,
-    }),
-  })
+        },
+      ],
+    }],
+    temperature: 0.1,
+  }, key)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error(
-      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
-    )
-  }
-
-  const data = await res.json()
   const content = (data.choices?.[0]?.message?.content ?? '') as string
   const match = content.match(/\[[\s\S]*\]/)
   if (!match) throw new Error('No ingredient list in Groq response')
@@ -199,19 +193,16 @@ export async function generateFridgeRecipeWithGroq(
   apiKey: string
 ): Promise<GeneratedRecipe> {
   const style = FRIDGE_VARIATIONS_GROQ[Math.floor(Math.random() * FRIDGE_VARIATIONS_GROQ.length)]
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${apiKey}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are a helpful cooking assistant for a European household. Respond with a single valid JSON object and nothing else — no markdown, no explanation, no code fences.',
-        },
-        {
-          role: 'user',
-          content: `The user has these FRIDGE ingredients:
+  const data = await groqFetch({
+    model: GROQ_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are a helpful cooking assistant for a European household. Respond with a single valid JSON object and nothing else — no markdown, no explanation, no code fences.',
+      },
+      {
+        role: 'user',
+        content: `The user has these FRIDGE ingredients:
 ${detected.join(', ')}
 
 The following pantry staples are ALWAYS available and do not need to be bought: rice, pasta, spaghetti, potatoes, carrots, onions, garlic, bread, flour, butter, olive oil, eggs, oats, lentils, canned tomatoes, salt, pepper, sugar, and common spices.
@@ -230,21 +221,12 @@ Rules:
 - Use metric units only: grams (g), kilograms (kg), millilitres (ml), litres (l), Celsius (°C) — no cups, oz, lbs, or °F
 - ingredients: one ingredient with quantity per line, joined with \\n
 - instructions: array of plain step strings, no numbering`,
-        },
-      ],
-      temperature: 0.9,
-      response_format: { type: 'json_object' },
-    }),
-  })
+      },
+    ],
+    temperature: 0.9,
+    response_format: { type: 'json_object' },
+  }, apiKey)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error(
-      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
-    )
-  }
-
-  const data = await res.json()
   return parseGeneratedRecipe((data.choices?.[0]?.message?.content ?? '') as string)
 }
 
@@ -252,39 +234,27 @@ export async function generateIngredientTagsWithGroq(
   ingredients: string,
   key: string,
 ): Promise<string[]> {
-  const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-    body: JSON.stringify({
-      model: GROQ_MODEL,
-      messages: [
-        {
-          role: 'system',
-          content: 'You are an ingredient extractor. Respond with a single valid JSON array and nothing else — no markdown, no explanation.',
-        },
-        {
-          role: 'user',
-          content: `Extract a list of English ingredient names from this ingredient list.
+  const data = await groqFetch({
+    model: GROQ_MODEL,
+    messages: [
+      {
+        role: 'system',
+        content: 'You are an ingredient extractor. Respond with a single valid JSON array and nothing else — no markdown, no explanation.',
+      },
+      {
+        role: 'user',
+        content: `Extract a list of English ingredient names from this ingredient list.
 Return ONLY a valid JSON array of lowercase strings — no quantities, no units, no preparation notes, just the base name.
 Example: ["chicken", "garlic", "cream", "lemon"]
 
 Ingredients:
 ${ingredients}`,
-        },
-      ],
-      temperature: 0.1,
-      response_format: { type: 'json_object' },
-    }),
-  })
+      },
+    ],
+    temperature: 0.1,
+    response_format: { type: 'json_object' },
+  }, key)
 
-  if (!res.ok) {
-    const body = await res.json().catch(() => null)
-    throw new Error(
-      (body as { error?: { message?: string } } | null)?.error?.message ?? `Groq error ${res.status}`
-    )
-  }
-
-  const data = await res.json()
   const content = (data.choices?.[0]?.message?.content ?? '') as string
   // Groq json_object wraps the array; try direct parse then look for array
   let parsed: unknown
@@ -307,25 +277,19 @@ export async function translateIngredientTermWithGroq(
   key: string,
 ): Promise<string> {
   try {
-    const res = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${key}` },
-      body: JSON.stringify({
-        model: GROQ_MODEL,
-        messages: [
-          {
-            role: 'user',
-            content: `Translate this food ingredient term to English. Return ONLY the English word, lowercase, nothing else.
+    const data = await groqFetch({
+      model: GROQ_MODEL,
+      messages: [
+        {
+          role: 'user',
+          content: `Translate this food ingredient term to English. Return ONLY the English word, lowercase, nothing else.
 If it is already English, return it unchanged.
 
 Term: ${term}`,
-          },
-        ],
-        temperature: 0.1,
-      }),
-    })
-    if (!res.ok) return term
-    const data = await res.json()
+        },
+      ],
+      temperature: 0.1,
+    }, key)
     const translated = ((data.choices?.[0]?.message?.content ?? '') as string)
       .trim().toLowerCase().replace(/[^a-z\s]/g, '').trim()
     return translated || term
