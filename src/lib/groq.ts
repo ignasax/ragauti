@@ -94,16 +94,13 @@ Rules:
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
 }
 
-export async function extractRecipeWithGroq(html: string, key: string): Promise<ExtractedRecipe> {
-  const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
-  const fromLd = extractFromJsonLd(html)
-  if (fromLd && required.every(k => fromLd[k])) return fromLd
+function parseItpmOverage(message: string): { limit: number; requested: number } | null {
+  const match = message.match(/input tokens per minute \(ITPM\): Limit (\d+), Requested (\d+)/i)
+  return match ? { limit: Number(match[1]), requested: Number(match[2]) } : null
+}
 
-  // This account's Groq input-token cap is 7000/min (~3.2 chars/token observed),
-  // so keep well under that to leave room for the prompt wrapper.
-  const text = html.slice(0, 13_000)
-
-  const data = await groqFetch({
+async function fetchRecipeFromText(text: string, key: string): Promise<GroqResponse> {
+  return groqFetch({
     model: GROQ_MODEL,
     messages: [
       {
@@ -141,6 +138,27 @@ ${text}`,
     max_completion_tokens: 900,
     reasoning_effort: 'none',
   }, key)
+}
+
+export async function extractRecipeWithGroq(html: string, key: string): Promise<ExtractedRecipe> {
+  const required: (keyof ExtractedRecipe)[] = ['title', 'ingredients', 'instructions']
+  const fromLd = extractFromJsonLd(html)
+  if (fromLd && required.every(k => fromLd[k])) return fromLd
+
+  // Start with a generous slice; if Groq reports it still exceeds this account's
+  // input-token cap, it tells us the exact limit and requested size — use those
+  // to shrink to a size that actually fits, and retry once.
+  let text = html.slice(0, 13_000)
+  let data: GroqResponse
+  try {
+    data = await fetchRecipeFromText(text, key)
+  } catch (err) {
+    const overage = err instanceof Error ? parseItpmOverage(err.message) : null
+    if (!overage) throw err
+    const safeChars = Math.max(1000, Math.floor(text.length * (overage.limit / overage.requested) * 0.85))
+    text = html.slice(0, safeChars)
+    data = await fetchRecipeFromText(text, key)
+  }
 
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
 }
