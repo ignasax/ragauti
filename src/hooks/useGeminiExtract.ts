@@ -8,7 +8,7 @@ import {
 import { extractRecipeWithGroq, extractRecipeFromImageWithGroq } from '../lib/groq'
 import { useGeminiKey } from '../contexts/GeminiKeyContext'
 import { supabase } from '../lib/supabase'
-import { detectInputType } from '../utils/extractionInput'
+import { detectInputType, extractYoutubeVideoId } from '../utils/extractionInput'
 
 interface ExtractionState {
   isExtracting: boolean
@@ -91,9 +91,18 @@ export function useGeminiExtract() {
           throw new Error((body as { error?: string } | null)?.error ?? 'Could not fetch the URL')
         }
         const { html } = await res.json() as { html: string }
-        return provider === 'groq'
+        const data = await (provider === 'groq'
           ? extractRecipeWithGroq(html, activeKey)
-          : extractRecipe(html, activeKey)
+          : extractRecipe(html, activeKey))
+
+        // YouTube pages rarely expose a usable recipe photo in scraped text —
+        // fall back to the video thumbnail so the recipe isn't imageless.
+        if (!data.image_url && inputType === 'youtube') {
+          const videoId = extractYoutubeVideoId(trimmed)
+          if (videoId) data.image_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
+        }
+
+        return data
       })
       return
     }
