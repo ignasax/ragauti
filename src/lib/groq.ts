@@ -87,6 +87,7 @@ Rules:
       },
     ],
     temperature: 0.1,
+    max_tokens: 900,
   }, key)
 
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
@@ -134,6 +135,7 @@ ${text}`,
     ],
     temperature: 0.1,
     response_format: { type: 'json_object' },
+    max_tokens: 900,
   }, key)
 
   return parseGroqJson((data.choices?.[0]?.message?.content ?? '') as string)
@@ -166,6 +168,7 @@ Example: ["chicken", "garlic", "lemon", "cream", "eggs"]`,
       ],
     }],
     temperature: 0.1,
+    max_tokens: 400,
   }, key)
 
   const content = (data.choices?.[0]?.message?.content ?? '') as string
@@ -225,6 +228,7 @@ Rules:
     ],
     temperature: 0.9,
     response_format: { type: 'json_object' },
+    max_tokens: 900,
   }, apiKey)
 
   return parseGeneratedRecipe((data.choices?.[0]?.message?.content ?? '') as string)
@@ -253,6 +257,7 @@ ${ingredients}`,
     ],
     temperature: 0.1,
     response_format: { type: 'json_object' },
+    max_tokens: 250,
   }, key)
 
   const content = (data.choices?.[0]?.message?.content ?? '') as string
@@ -289,6 +294,7 @@ Term: ${term}`,
         },
       ],
       temperature: 0.1,
+      max_tokens: 20,
     }, key)
     const translated = ((data.choices?.[0]?.message?.content ?? '') as string)
       .trim().toLowerCase().replace(/[^a-z\s]/g, '').trim()
