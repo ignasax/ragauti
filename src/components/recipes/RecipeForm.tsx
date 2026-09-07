@@ -96,7 +96,8 @@ export function RecipeForm({ initialData, onSubmit, isSubmitting, submitLabel, t
         <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider block mb-2">Image</span>
         {imagePreview ? (
           <div className="relative rounded-xl overflow-hidden aspect-video bg-warm-surface">
-            <img src={imagePreview} alt="Recipe preview" className="w-full h-full object-cover" />
+            <img src={imagePreview} alt="Recipe preview" className="w-full h-full object-cover"
+              onError={() => { setImagePreview(null); set('image_url', null); set('image_urls', []) }} />
             <button type="button" onClick={clearImage} aria-label="Remove image"
               className="absolute top-2 right-2 w-8 h-8 bg-black/60 rounded-full flex items-center justify-center cursor-pointer touch-manipulation active:opacity-70">
               <X className="w-4 h-4 text-white" />

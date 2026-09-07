@@ -95,9 +95,10 @@ export function useGeminiExtract() {
           ? extractRecipeWithGroq(html, activeKey)
           : extractRecipe(html, activeKey))
 
-        // YouTube pages rarely expose a usable recipe photo in scraped text —
-        // fall back to the video thumbnail so the recipe isn't imageless.
-        if (!data.image_url && inputType === 'youtube') {
+        // A YouTube page's scraped text has no real recipe photo, so anything the
+        // AI picks as "image_url" there is unreliable (wrong, or malformed) —
+        // always prefer the video's own thumbnail instead of trusting that guess.
+        if (inputType === 'youtube') {
           const videoId = extractYoutubeVideoId(trimmed)
           if (videoId) data.image_url = `https://img.youtube.com/vi/${videoId}/hqdefault.jpg`
         }
