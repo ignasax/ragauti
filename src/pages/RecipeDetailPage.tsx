@@ -16,6 +16,7 @@ export function RecipeDetailPage() {
   const { mutateAsync: deleteRecipe, isPending: isDeleting } = useDeleteRecipe()
   const { mutate: toggleFav } = useToggleFavourite()
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [imageError, setImageError] = useState(false)
   const [section, setSection] = useState<'ingredients' | 'instructions' | 'notes'>('ingredients')
   const [servingMultiplier, setServingMultiplier] = useState(1)
   const { mutate: addToGrocery, isPending: isAddingToGrocery } = useAddRecipeToGrocery()
@@ -65,7 +66,7 @@ export function RecipeDetailPage() {
           </button>
         </div>
       </div>
-      {(recipe.image_urls?.[0] ?? recipe.image_url) && (
+      {(recipe.image_urls?.[0] ?? recipe.image_url) && !imageError && (
         <div className="w-full aspect-video bg-warm-surface">
           <img
             src={recipe.image_urls?.[0] ?? recipe.image_url!}
@@ -73,6 +74,7 @@ export function RecipeDetailPage() {
             className="w-full h-full object-cover"
             loading="eager"
             decoding="async"
+            onError={() => setImageError(true)}
           />
         </div>
       )}
