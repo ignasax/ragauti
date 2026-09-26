@@ -1,6 +1,8 @@
 import { extractFromJsonLd, sanitizeExtracted, parseGeneratedRecipe, type ExtractedRecipe, type GeneratedRecipe, type ImageInput } from './gemini'
 
-const GROQ_MODEL = 'qwen/qwen3.6-27b'
+// qwen3.6-27b was shut down on 2026-09-14; 3.8 is its direct successor
+// (same 131K context, vision, JSON mode, reasoning_effort).
+const GROQ_MODEL = 'qwen/qwen3.8-27b'
 
 function parseGroqJson(content: string): ExtractedRecipe {
   try {
