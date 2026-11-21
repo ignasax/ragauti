@@ -3,22 +3,23 @@ import { Link } from 'react-router-dom'
 import { Plus, X, Utensils } from 'lucide-react'
 import { RecipePicker } from './RecipePicker'
 import { useAddMealSlot, useRemoveMealSlot } from '../../hooks/useMealPlan'
-import type { MealPlanSlot, Recipe } from '../../types/app'
+import type { MealPlanSlot, MealType, Recipe } from '../../types/app'
 
 interface MealSlotProps {
   date: string
-  mealType: 'lunch' | 'dinner'
+  mealType: MealType
+  position: number
   slot?: MealPlanSlot
   windowStart: string
 }
 
-export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
+export function MealSlot({ date, mealType, position, slot, windowStart }: MealSlotProps) {
   const [picking, setPicking] = useState(false)
   const { mutate: addSlot } = useAddMealSlot(windowStart)
   const { mutate: removeSlot } = useRemoveMealSlot(windowStart)
 
   const handleSelect = (recipe: Recipe) => {
-    addSlot({ slot_date: date, meal_type: mealType, recipe_id: recipe.id })
+    addSlot({ slot_date: date, meal_type: mealType, position, recipe_id: recipe.id })
     setPicking(false)
   }
 
@@ -35,7 +36,7 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
           </button>
           <Link
             to={`/recipes/${slot.recipe.id}`}
-            className="flex items-stretch min-h-[80px] active:opacity-70 transition-opacity"
+            className="flex items-stretch min-h-[56px] active:opacity-70 transition-opacity"
           >
             <div className="w-10 flex-shrink-0 bg-warm-border">
               {slot.recipe.image_url
@@ -54,8 +55,8 @@ export function MealSlot({ date, mealType, slot, windowStart }: MealSlotProps) {
   return (
     <>
       <button onClick={() => setPicking(true)}
-        className="w-full min-h-[80px] border-2 border-dashed border-warm-border rounded-lg flex items-center justify-center cursor-pointer touch-manipulation active:bg-warm-surface transition-colors"
-        aria-label={`Add ${mealType} for ${date}`}>
+        className="w-full min-h-[56px] border-2 border-dashed border-warm-border rounded-lg flex items-center justify-center cursor-pointer touch-manipulation active:bg-warm-surface transition-colors"
+        aria-label={`Add ${mealType.replace('_', ' ')} option ${position + 1} for ${date}`}>
         <Plus className="w-4 h-4 text-warm-muted" />
       </button>
       {picking && <RecipePicker onSelect={handleSelect} onClose={() => setPicking(false)} />}

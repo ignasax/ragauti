@@ -25,11 +25,14 @@ export interface Recipe {
   updated_at: string
 }
 
+export type MealType = 'breakfast' | 'snack_am' | 'lunch' | 'snack_pm' | 'dinner'
+
 export interface MealPlanSlot {
   id: string
   user_id: string
   slot_date: string
-  meal_type: 'lunch' | 'dinner'
+  meal_type: MealType
+  position: number
   recipe_id: string
   created_at: string
   recipe?: Pick<Recipe, 'id' | 'title' | 'image_url'>

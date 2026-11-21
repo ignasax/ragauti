@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../lib/supabase'
-import type { MealPlanSlot, Recipe } from '../types/app'
+import type { MealPlanSlot, MealType, Recipe } from '../types/app'
 
 export function useMealPlan(windowStart: string) {
   return useQuery({
@@ -24,15 +24,15 @@ export function useMealPlan(windowStart: string) {
 export function useAddMealSlot(windowStart: string) {
   const qc = useQueryClient()
   return useMutation({
-    mutationFn: async ({ slot_date, meal_type, recipe_id }: { slot_date: string; meal_type: 'lunch' | 'dinner'; recipe_id: string }) => {
+    mutationFn: async ({ slot_date, meal_type, position, recipe_id }: { slot_date: string; meal_type: MealType; position: number; recipe_id: string }) => {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) throw new Error('Not authenticated')
       const { error } = await supabase
         .from('meal_plan_slots')
-        .upsert({ slot_date, meal_type, recipe_id, user_id: user.id }, { onConflict: 'user_id,slot_date,meal_type' })
+        .upsert({ slot_date, meal_type, position, recipe_id, user_id: user.id }, { onConflict: 'user_id,slot_date,meal_type,position' })
       if (error) throw error
     },
-    onMutate: async ({ slot_date, meal_type, recipe_id }) => {
+    onMutate: async ({ slot_date, meal_type, position, recipe_id }) => {
       await qc.cancelQueries({ queryKey: ['meal-plan', windowStart] })
       const previous = qc.getQueryData<MealPlanSlot[]>(['meal-plan', windowStart])
       const recipes = qc.getQueryData<Recipe[]>(['recipes']) ?? []
@@ -42,12 +42,13 @@ export function useAddMealSlot(windowStart: string) {
         user_id: '',
         slot_date,
         meal_type,
+        position,
         recipe_id,
         created_at: new Date().toISOString(),
         recipe: recipe ? { id: recipe.id, title: recipe.title, image_url: recipe.image_url } : undefined,
       }
       qc.setQueryData<MealPlanSlot[]>(['meal-plan', windowStart], old => {
-        const filtered = (old ?? []).filter(s => !(s.slot_date === slot_date && s.meal_type === meal_type))
+        const filtered = (old ?? []).filter(s => !(s.slot_date === slot_date && s.meal_type === meal_type && s.position === position))
         return [...filtered, tempSlot]
       })
       return { previous }

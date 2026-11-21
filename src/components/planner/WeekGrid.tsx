@@ -1,9 +1,18 @@
 import { useMealPlan, getLocalDateStr } from '../../hooks/useMealPlan'
 import { MealSlot } from './MealSlot'
+import type { MealType } from '../../types/app'
 
 interface WeekGridProps { windowStart: string }
 
 const SHORT_DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+const MEAL_ROWS: { type: MealType; label: string; options: number }[] = [
+  { type: 'breakfast', label: 'Breakfast', options: 2 },
+  { type: 'snack_am', label: 'Snack', options: 1 },
+  { type: 'lunch', label: 'Lunch', options: 2 },
+  { type: 'snack_pm', label: 'Snack', options: 1 },
+  { type: 'dinner', label: 'Dinner', options: 2 },
+]
 
 export function WeekGrid({ windowStart }: WeekGridProps) {
   const { data: slots = [] } = useMealPlan(windowStart)
@@ -19,26 +28,36 @@ export function WeekGrid({ windowStart }: WeekGridProps) {
     return { label, date, isToday: date === today }
   })
 
-  const getSlot = (date: string, mealType: 'lunch' | 'dinner') =>
-    slots.find(s => s.slot_date === date && s.meal_type === mealType)
+  const getSlot = (date: string, mealType: MealType, position: number) =>
+    slots.find(s => s.slot_date === date && s.meal_type === mealType && (s.position ?? 0) === position)
 
   return (
-    <div className="flex flex-col gap-1">
-      <div className="grid grid-cols-[68px_1fr_1fr] gap-2 px-1 pb-1">
-        <div />
-        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider text-center">Lunch</span>
-        <span className="font-sans font-bold text-warm-secondary text-[10px] uppercase tracking-wider text-center">Dinner</span>
-      </div>
+    <div className="flex flex-col gap-3 pb-4">
       {days.map(({ label, date, isToday }) => (
-        <div key={date} className={`grid grid-cols-[68px_1fr_1fr] gap-2 items-start rounded-xl px-1 ${isToday ? 'bg-warm-accent/12' : ''}`}>
-          <div className="min-h-[80px] flex items-center">
-            <span className={`font-sans text-sm font-semibold ${isToday ? 'text-warm-accent' : 'text-warm-primary'}`}>
-              {label}
-            </span>
-          </div>
-          <MealSlot date={date} mealType="lunch" slot={getSlot(date, 'lunch')} windowStart={windowStart} />
-          <MealSlot date={date} mealType="dinner" slot={getSlot(date, 'dinner')} windowStart={windowStart} />
-        </div>
+        <section
+          key={date}
+          className={`rounded-xl p-2 flex flex-col gap-1.5 ${isToday ? 'bg-warm-accent/12' : 'bg-warm-surface/40'}`}
+        >
+          <h2 className={`font-sans text-sm font-semibold px-1 ${isToday ? 'text-warm-accent' : 'text-warm-primary'}`}>
+            {label}
+          </h2>
+          {MEAL_ROWS.map(({ type, label: mealLabel, options }) => (
+            <div key={type} className="grid grid-cols-[64px_1fr_1fr] gap-2 items-center">
+              <span className={`font-sans font-bold text-[10px] uppercase tracking-wider px-1 ${options === 1 ? 'text-warm-muted' : 'text-warm-secondary'}`}>
+                {mealLabel}
+              </span>
+              {options === 1 ? (
+                <div className="col-span-2">
+                  <MealSlot date={date} mealType={type} position={0} slot={getSlot(date, type, 0)} windowStart={windowStart} />
+                </div>
+              ) : (
+                [0, 1].map(pos => (
+                  <MealSlot key={pos} date={date} mealType={type} position={pos} slot={getSlot(date, type, pos)} windowStart={windowStart} />
+                ))
+              )}
+            </div>
+          ))}
+        </section>
       ))}
     </div>
   )

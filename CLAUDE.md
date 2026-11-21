@@ -68,6 +68,7 @@ Every table (`recipes`, `meal_plans`, `grocery_lists`, `profiles`) has RLS enabl
 - `001` — initial schema (recipes, meal_plans, grocery_lists, profiles)
 - `002`, `003` — recipe field additions
 - `004_ai_provider.sql` — adds `groq_api_key text` and `ai_provider text DEFAULT 'gemini'` to profiles. **Must be run in production via Supabase SQL Editor if not yet applied.**
+- `009_meal_plan_breakfast_snacks.sql` — planner meal types `breakfast | snack_am | lunch | snack_pm | dinner`, plus `position` (0/1) so breakfast/lunch/dinner get 2 options each. Unique key is now `(user_id, slot_date, meal_type, position)`. **Must be run in production via Supabase SQL Editor.**
 
 ### Serving size scaler
 
